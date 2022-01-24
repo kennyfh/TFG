@@ -1,23 +1,23 @@
 module Lib
 (getAllFrames,
 saveVideo
-
 ) where
 
--- Módulos utilizados
 -- Módulos utilizados
 import Codec.FFmpeg
 import Codec.FFmpeg.Juicy
 import Codec.FFmpeg.Types
-import Codec.Picture
+import Codec.Picture ( Image(imageWidth, imageHeight), PixelRGB8 )
 import Control.Applicative
 import Data.Maybe
-import Control.Exception
-import Data.Tuple
-import Control.Monad
+import Control.Exception ( try, SomeException )
+import Data.Tuple ( swap )
+import Control.Monad ( forM_ )
 import Foreign.C (CInt)
 
-
+{--------------------------------------------------------------------------------------------
+getAllFrames
+---------------------------------------------------------------------------------------------}
 getAllFrames :: FilePath  -> IO [(Double, Image PixelRGB8)]
 getAllFrames vidPath = do
     initFFmpeg
@@ -28,6 +28,9 @@ getAllFrames vidPath = do
             return []
         Right (getFrame, _) -> addNextFrame getFrame []
 
+{--------------------------------------------------------------------------------------------
+addNextFrame
+---------------------------------------------------------------------------------------------}
 addNextFrame :: IO (Maybe (Image PixelRGB8, Double)) -> [(Double, Image PixelRGB8)] -> IO [(Double, Image PixelRGB8)]
 addNextFrame getFrame frames = do
     frame <- getFrame
@@ -59,10 +62,15 @@ saveVideo x path = do
           h = fromIntegral $ imageHeight $ head img_ls
           fps = getFPS seconds_ls
 
+{--------------------------------------------------------------------------------------------
+defaultParams'
+---------------------------------------------------------------------------------------------}
 defaultParams' :: CInt -> CInt -> Int-> EncodingParams 
 defaultParams' w h fps= EncodingParams w h fps Nothing Nothing "" Nothing
 
-
+{--------------------------------------------------------------------------------------------
+getFPS
+---------------------------------------------------------------------------------------------}
 getFPS :: [Double] -> Int
 getFPS ls = div nframes (ceiling lasttime)
         where 
