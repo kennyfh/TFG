@@ -35,7 +35,10 @@ packages:
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
 #
-# extra-deps:
+extra-deps:
+  - JuicyPixels-3.3.6@sha256:03bd32c3a884ac8a32f49334f14695469a710945c84cef9a1e059a79ac416996,3911
+  - ffmpeg-light-0.14.0@sha256:4b8d45af99024fee650e46bb0219db18e626182e4e18cb7221d5716bda51620b,5299  
+  - JuicyPixels-util-0.2@sha256:54df721dc1194e3f1934a7696274e12479851d26bd440e92fce58af5c11b7fa9,929
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a

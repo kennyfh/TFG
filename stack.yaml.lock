@@ -3,7 +3,28 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: JuicyPixels-3.3.6@sha256:03bd32c3a884ac8a32f49334f14695469a710945c84cef9a1e059a79ac416996,3911
+    pantry-tree:
+      size: 2724
+      sha256: f3eb1f6b74e326849d949458f734cf8a0a93525bdad3871c23d76ac321697457
+  original:
+    hackage: JuicyPixels-3.3.6@sha256:03bd32c3a884ac8a32f49334f14695469a710945c84cef9a1e059a79ac416996,3911
+- completed:
+    hackage: ffmpeg-light-0.14.0@sha256:4b8d45af99024fee650e46bb0219db18e626182e4e18cb7221d5716bda51620b,5299
+    pantry-tree:
+      size: 1557
+      sha256: 00948636e26379699b10f5c471cc8450a7baf5e7b39d9f3e2da6a4ce75191c9c
+  original:
+    hackage: ffmpeg-light-0.14.0@sha256:4b8d45af99024fee650e46bb0219db18e626182e4e18cb7221d5716bda51620b,5299
+- completed:
+    hackage: JuicyPixels-util-0.2@sha256:54df721dc1194e3f1934a7696274e12479851d26bd440e92fce58af5c11b7fa9,929
+    pantry-tree:
+      size: 222
+      sha256: 0af4c927713168e03735d75e9b68fec8657bc5478b4fa1d294da9e4d463e044c
+  original:
+    hackage: JuicyPixels-util-0.2@sha256:54df721dc1194e3f1934a7696274e12479851d26bd440e92fce58af5c11b7fa9,929
 snapshots:
 - completed:
     size: 586120
