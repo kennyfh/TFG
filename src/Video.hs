@@ -1,4 +1,4 @@
-module Lib
+module Video
 (getAllFrames,
 saveVideo
 ) where
@@ -14,6 +14,7 @@ import Control.Exception ( try, SomeException )
 import Data.Tuple ( swap )
 import Control.Monad ( forM_ )
 import Foreign.C (CInt)
+
 
 {--------------------------------------------------------------------------------------------
 getAllFrames
@@ -38,12 +39,11 @@ addNextFrame getFrame frames = do
         Nothing -> do
             putStrLn "No more frames found."
             return frames
-        Just fr       -> do
-            let newFrameData = swap fr
+        Just fr      -> do
+            let newFrameData = swap fr --  swap <$> getFrame
             putStrLn ("Frame: " ++ show (length frames) ++ " added.")
             addNextFrame getFrame (frames ++ [newFrameData])
-
-
+            
 {--------------------------------------------------------------------------------------------
 saveVideo 
 ---------------------------------------------------------------------------------------------}
@@ -51,7 +51,6 @@ saveVideo :: [(Double,Image PixelRGB8)] -> FilePath -> IO ()
 saveVideo x path = do
     initFFmpeg
     frame <- imageWriter params path
-    -- putStrLn $ show fps
     forM_ img_ls (frame . Just)
     frame Nothing
     where img_ls = map snd x
