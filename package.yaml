@@ -24,7 +24,10 @@ dependencies:
 - JuicyPixels
 - ffmpeg-light
 - repa
-- fixed-vector
+- containers
+# - lens
+# - fixed-vector
+# - monad-parallel
 # - JuicyPixels-repa
 # - JuicyPixels-util
 

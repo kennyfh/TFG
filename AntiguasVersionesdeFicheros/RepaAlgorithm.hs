@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 module RepaAlgorithm where
 import Codec.Picture as P
 import Data.Array.Repa as R
