@@ -25,19 +25,26 @@ source-repository head
 
 library
   exposed-modules:
-      Image
+      Juicy
+      JuicyAccelerate
+      JuicyRepa
+      PruebasRandom
       Repa
-      Video
   other-modules:
       Paths_TFG_kenflohua
   hs-source-dirs:
       src
   build-depends:
       JuicyPixels
+    , accelerate
+    , accelerate-io-JuicyPixels
     , base >=4.7 && <5
     , containers
     , ffmpeg-light
+    , parallel
     , repa
+    , timeit
+    , vector
   default-language: Haskell2010
 
 executable TFG-kenflohua-exe
@@ -50,10 +57,15 @@ executable TFG-kenflohua-exe
   build-depends:
       JuicyPixels
     , TFG-kenflohua
+    , accelerate
+    , accelerate-io-JuicyPixels
     , base >=4.7 && <5
     , containers
     , ffmpeg-light
+    , parallel
     , repa
+    , timeit
+    , vector
   default-language: Haskell2010
 
 test-suite TFG-kenflohua-test
@@ -67,8 +79,13 @@ test-suite TFG-kenflohua-test
   build-depends:
       JuicyPixels
     , TFG-kenflohua
+    , accelerate
+    , accelerate-io-JuicyPixels
     , base >=4.7 && <5
     , containers
     , ffmpeg-light
+    , parallel
     , repa
+    , timeit
+    , vector
   default-language: Haskell2010

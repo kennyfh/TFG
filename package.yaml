@@ -20,11 +20,25 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/TFG-kenflohua#readme>
 
 dependencies:
+# Modulo base
 - base >= 4.7 && < 5
+# Modulo para leer imagenes en un formato standard
 - JuicyPixels
+# Modulo que nos permite leer videor y transformarlo en imagenes
 - ffmpeg-light
+# Modulo que nos permite procesar arrays paralelizando CPU
 - repa
+# Modulo para la estructura de datos : Sequence 
 - containers
+# Modulo para importar tiempo (NO funciona muy bien o se está usando mal)
+- timeit
+# Modulo para paralelizar elementos
+- parallel
+# Estructura de datos 
+- vector
+- accelerate
+# Nos permite leer imagenes de juicypixels
+- accelerate-io-JuicyPixels
 # - lens
 # - fixed-vector
 # - monad-parallel
@@ -42,6 +56,8 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    # - +RTS N8
+    # - -s
     dependencies:
     - TFG-kenflohua
 

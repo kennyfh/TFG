@@ -1,13 +1,13 @@
-module Video
-(getAllFrames,
+module Juicy (readImageJuicy,getAllFrames,
 saveVideo
-) where
+)where
 
--- Módulos utilizados
+
+{-- MODULOS IMPORTADOS-}
+import Codec.Picture
 import Codec.FFmpeg
 import Codec.FFmpeg.Juicy
 import Codec.FFmpeg.Types
-import Codec.Picture ( Image(imageWidth, imageHeight), PixelRGB8 )
 import Control.Applicative
 import Data.Maybe
 import Control.Exception ( try, SomeException )
@@ -15,6 +15,20 @@ import Data.Tuple ( swap )
 import Control.Monad ( forM_ )
 import Foreign.C (CInt)
 
+{-- TIPOS DE DATOS UTILIZADOS--}
+
+
+{-- FUNCIONES--}
+
+
+-- Función genérica que nos lee las imágenes en RGB8 en formato
+-- JuicyPixels
+readImageJuicy :: FilePath -> IO (Image PixelRGB8)
+readImageJuicy path = do
+    img <- readImage path
+    case img of
+        Left e -> fail e
+        Right img -> return $ convertRGB8 img
 
 {--------------------------------------------------------------------------------------------
 getAllFrames
@@ -43,7 +57,7 @@ addNextFrame getFrame frames = do
             let newFrameData = swap fr --  swap <$> getFrame
             putStrLn ("Frame: " ++ show (length frames) ++ " added.")
             addNextFrame getFrame (frames ++ [newFrameData])
-            
+
 {--------------------------------------------------------------------------------------------
 saveVideo 
 ---------------------------------------------------------------------------------------------}
@@ -64,7 +78,7 @@ saveVideo x path = do
 {--------------------------------------------------------------------------------------------
 defaultParams'
 ---------------------------------------------------------------------------------------------}
-defaultParams' :: CInt -> CInt -> Int-> EncodingParams 
+defaultParams' :: CInt -> CInt -> Int-> EncodingParams
 defaultParams' w h fps= EncodingParams w h fps Nothing Nothing "" Nothing
 
 {--------------------------------------------------------------------------------------------
@@ -72,6 +86,12 @@ getFPS
 ---------------------------------------------------------------------------------------------}
 getFPS :: [Double] -> Int
 getFPS ls = div nframes (ceiling lasttime)
-        where 
+        where
               lasttime = last ls
               nframes = length ls
+
+
+
+{-- TEST --}
+test :: IO ()
+test  = putStrLn "Hello World"

@@ -1,12 +1,14 @@
 module Main where
 
-import Video
-import Image
-import Repa as R
+import JuicyRepa as Rtest
+import JuicyAccelerate as Atest
+import Repa as Rx
+import PruebasRandom as Rn
 -- MAIN 
 main :: IO ()
 main =  do
-    R.test 
+    -- Rn.test
+    Rx.test 
     -- testImage
     -- putStrLn "Bienvenido, introduzca la ruta del video para resumir"
     -- path <- getLine
