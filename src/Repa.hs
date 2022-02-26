@@ -12,13 +12,15 @@ import Control.Parallel.Strategies
 import System.TimeIt
 import Data.Vector as V
 import JuicyRepa
-import Juicy
+-- import Juicy
 import Control.Parallel
 test :: IO ()
 test = do
     -- Prueba Histogramas
     img <- readImageIntoRepa "saitama.png"
     print $ generateHists img
+
+
     -- let xs = R.computeS $ R.fromFunction (Z:.25) (\(Z:.i) -> i :: Int) ::(Array U DIM1 Int)
     -- let asd = R.extract (Z :. 0) (Z :. 5) xs
     -- let channel  = img !! 1
@@ -96,9 +98,14 @@ generateHists xs =
         cs = bs `using` parList rdeepseq
         in cs
 
-generateH :: Channel Int -> HVector
-generateH band =  L.foldr1 (V.zipWith (+)) (generateR band) -- TODO: Pararelizar esto
+-- generateH :: Channel Int -> HVector
+-- generateH band =  L.foldr1 (V.zipWith (+)) (generateR band) -- TODO: Pararelizar esto
 
+-- TODO: revisar esto
+generateH :: Channel Int -> HVector
+generateH band = pfold (V.zipWith (+)) (generateR band)
+
+-- TODO: Paralelizar esto usando map 
 generateR :: Channel Int -> [HVector]
 generateR band = [generateR2 band i | i<-[0..w-1]]
     where (Z :. w :. h) =  R.extent band
@@ -107,10 +114,18 @@ generateR band = [generateR2 band i | i<-[0..w-1]]
 generateR2 :: Channel Int -> Int -> Vector Int
 generateR2 band i=
     let zero = V.replicate 256 0 -- O(n)
-        fila =  R.toList $ R.slice band  (Any :. (i::Int) :. All) -- Seleccionamos la Fila
+        fila =  R.toList $ R.slice band  (Any :. (i::Int) :. All) -- Seleccionamos la Fila [12,3,4,4,5]
         l = L.zip fila [1,1..] 
     in V.accum (+) zero l -- Crearemos el histograma con los valores correspondientes
 
+
+pfold :: (a -> a -> a) -> [a] -> a
+pfold _ [x] = x
+pfold mappend xs  = (ys `par` zs) `pseq` (ys `mappend` zs) where
+  len = L.length xs
+  (ys', zs') = L.splitAt (len `div` 2) xs
+  ys = pfold mappend ys'
+  zs = pfold mappend zs'
 
 {- Blanco y negro 
 
@@ -132,20 +147,20 @@ generateComponentB ind = R.map (\v -> (fromIntegral (fromIntegral v ::Int) / 255
 
 {-- Filtro gaussiano
 --}
-type Filter a = Channel a -> IO (Channel a)
-type Filters a = [Filter a]
+-- type Filter a = Channel a -> IO (Channel a)
+-- type Filters a = [Filter a]
 
-gaussStencil :: Stencil DIM2 Int
-gaussStencil =
-    [stencil2| 2 4 5 4 2
-               4 9 12 9 4
-               5 12 15 12 5
-               4 9 12 9 4
-               2 4 5 4 2 |]
+-- gaussStencil :: Stencil DIM2 Int
+-- gaussStencil =
+--     [stencil2| 2 4 5 4 2
+--                4 9 12 9 4
+--                5 12 15 12 5
+--                4 9 12 9 4
+--                2 4 5 4 2 |]
 
-applyStencil :: Stencil DIM2 Int -> Filter Int
-applyStencil stencil = computeP . mapStencil2 (BoundConst 0) stencil
+-- applyStencil :: Stencil DIM2 Int -> Filter Int
+-- applyStencil stencil = computeP . mapStencil2 (BoundConst 0) stencil
 
-passes :: Int -> Filter Int -> Filter Int
-passes 1 filter = filter
-passes n filter = filter >=> passes (n-1) filter
+-- passes :: Int -> Filter Int -> Filter Int
+-- passes 1 filter = filter
+-- passes n filter = filter >=> passes (n-1) filter

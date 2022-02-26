@@ -6,9 +6,9 @@ test :: IO()
 test  = do
 
     let arr =  fromListUnboxed (ix2 3 3) [0..8] :: Array U DIM2 Double     
-    let x = computeUnboxedS $ slice arr (Any :. (0::Int)) -- :: Array U DIM1 Double
+    let fila =  toList $ slice arr  (Any :. (0::Int) :. All) 
     print arr
-    print x
+    print fila
     putStrLn "ASD"
 
 --https://stackoverflow.com/questions/30234410/repas-slices-and-shapes/30240085#30240085

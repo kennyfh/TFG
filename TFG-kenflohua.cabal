@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Accelerate
       Juicy
       JuicyAccelerate
       JuicyRepa
@@ -41,8 +42,11 @@ library
     , base >=4.7 && <5
     , containers
     , ffmpeg-light
+    , gtk
+    , gtk2hs-buildtools
     , parallel
     , repa
+    , threadscope
     , timeit
     , vector
   default-language: Haskell2010
@@ -62,8 +66,11 @@ executable TFG-kenflohua-exe
     , base >=4.7 && <5
     , containers
     , ffmpeg-light
+    , gtk
+    , gtk2hs-buildtools
     , parallel
     , repa
+    , threadscope
     , timeit
     , vector
   default-language: Haskell2010
@@ -84,8 +91,11 @@ test-suite TFG-kenflohua-test
     , base >=4.7 && <5
     , containers
     , ffmpeg-light
+    , gtk
+    , gtk2hs-buildtools
     , parallel
     , repa
+    , threadscope
     , timeit
     , vector
   default-language: Haskell2010

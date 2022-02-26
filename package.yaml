@@ -39,6 +39,9 @@ dependencies:
 - accelerate
 # Nos permite leer imagenes de juicypixels
 - accelerate-io-JuicyPixels
+- gtk2hs-buildtools
+- gtk
+- threadscope
 # - lens
 # - fixed-vector
 # - monad-parallel
@@ -56,8 +59,6 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    # - +RTS N8
-    # - -s
     dependencies:
     - TFG-kenflohua
 

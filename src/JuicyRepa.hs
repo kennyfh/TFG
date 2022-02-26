@@ -47,7 +47,6 @@ repaToJuicy img = generateImage func w h
 {-- TEST --}
 test :: IO ()
 test  = do
-    
     test <- readImageJuicy "saitama.png"
     
     
