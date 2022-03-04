@@ -9,48 +9,17 @@ import Data.Array.Repa.Stencil
 import Data.Array.Repa.Stencil.Dim2
 import Control.Monad
 import Control.Parallel.Strategies
-import System.TimeIt
-import Data.Vector as V
+import Data.Vector as V hiding (mapM)
 import JuicyRepa
 import Juicy
 import Control.Parallel
+
 test :: IO ()
 test = do
-    -- Prueba Histogramas
-    -- img <- readImageIntoRepa "saitama.png"
-    -- print $ generateHists img
-
-    -- let xs = R.computeS $ R.fromFunction (Z:.25) (\(Z:.i) -> i :: Int) ::(Array U DIM1 Int)
-    -- let asd = R.extract (Z :. 0) (Z :. 5) xs
-    -- let channel  = img !! 1
-    -- print $ R.extent channel
-    -- let asd = generateHistograms img
-    -- let asd = generateHistograms img
-    -- timeIt $ print $ generateHistograms img
-    -- alpha <- toGrayScale img
-    -- -- print alpha
-    -- let du = ImageRGB8 $ repaToJuicy img
-    -- savePngImage "saitamanew.png" du
-
-    {--Pruebas 1 canal --}
-    img <- readImageJuicy "saitama.png"
-    -- channel <- channeljuicyToRepa $ extractChannel 0 img
-    -- ax <- prom channel
-    -- ax2 <- applyStencil edgeKernel ax
-    -- ax3 <- applyStencil edgeKernel ax2
-    -- ax4 <- applyStencil edgeKernel ax3
-    -- asd <- dem ax4
-    -- savePngImage "asaaaaa.png" (ImageY8 $ channelToJcy asd)
-    -- let asd = generateH channel
-    -- putStrLn "AAAAAAAAAA"
-    -- print asd
-    -- gaussian <- gGaussianChannel channel
-    -- savePngImage "saitamablur.png" (ImageY8 $ channelToJcy gaussian)
-
-    -- savePngImage "saitamagauss.png" (ImageRGB8 $ repaToJuicy xs)
-
-    putStrLn "Fin de test"
-
+    img <- readImageIntoRepa "saitama.png"
+    asd <- mapM (promote >=> passes 2 gaussFilter >=> demote) img
+    savePngImage "axxa.png" (ImageRGB8 $ repaToJuicy asd)
+   
 
 
 {-HISTOGRAM -}
@@ -160,41 +129,62 @@ generateComponentB ind = R.map (\v -> (fromIntegral (fromIntegral v ::Int) / 255
 
 {-- Filtro gaussiano
 -- --}
-
---Tipos de datos utilizados en el paquete JuicyRepa
--- type Channel a = Array U DIM2 a
--- type ImgRGB = [Channel Int]
--- type ImgA = Channel Float
+type Filter = Channel Float -> IO (Channel Float)
 
 
-prom :: Channel Int -> IO (Channel Float)
-prom  = computeP . R.map func
-    where func :: Int -> Float
+promote :: Monad m => Channel Int -> m (Channel Float)
+promote  = computeP . R.map func
+    where {-# INLINE func #-}
+          func :: Int -> Float
           func x = fromIntegral x
+{-# NOINLINE promote #-}
 
 
-dem :: Channel Float -> IO (Channel Pixel8)
-dem =  computeP . R.map ffs
-    where ffs :: Float -> Pixel8
-          ffs x = fromIntegral (truncate x :: Int)
-          
-applyStencil :: Stencil DIM2 Float -> Channel Float -> IO (Channel Float)
+demote :: Monad m => Channel Float -> m (Channel Int)
+demote =  computeP . R.map func
+    where {-# INLINE func #-}
+          func :: Float -> Int
+          func x =  (truncate x :: Int)
+{-# NOINLINE demote #-}
+
+-- demote :: Monad m => Channel Float -> m (Channel Pixel8)
+-- demote =  computeP . R.map func
+--     where {-# INLINE func #-}
+--           func :: Float -> Pixel8
+--           func x = fromIntegral (truncate x :: Int)
+-- {-# NOINLINE demote #-}
+
+-- applyStencil :: Monad m => Stencil DIM2 Float -> Channel Float -> m (Channel Float)
+applyStencil :: Stencil DIM2 Float -> Filter
 applyStencil st = computeP . mapStencil2 (BoundConst 0) st
+{-# NOINLINE applyStencil #-}
 
 
-edgeKernel :: Stencil DIM2 Float 
+passes :: Int -> Filter -> Filter
+passes 1 filter = filter
+passes n filter = filter >=> passes (n-1) filter
+
+
+normalize :: Float -> Filter
+normalize n = computeP . R.map (/ n)
+
+
+gaussFilter :: Filter
+gaussFilter = applyStencil gaussKernel >=> normalize 159
+
+{-Kernels -}
+edgeKernel :: Stencil DIM2 Float
 edgeKernel =
         [stencil2| 0 1 0
                    1 -4 1
                    0 1 0 |]
 
 
-gaussKernel :: Stencil DIM2 Float  
+gaussKernel :: Stencil DIM2 Float
 gaussKernel =
     [stencil2| 2 4 5 4 2
                4 9 12 9 4
                5 12 15 12 5
                4 9 12 9 4
                2 4 5 4 2 |]
-
 
