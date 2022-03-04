@@ -41,12 +41,7 @@ dependencies:
 - accelerate-io-JuicyPixels
 - gtk2hs-buildtools
 - gtk
-- threadscope
-# - lens
-# - fixed-vector
-# - monad-parallel
-# - JuicyPixels-repa
-# - JuicyPixels-util
+- accelerate-llvm-ptx
 
 library:
   source-dirs: src
@@ -59,6 +54,8 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -eventlog
+    - --make
     dependencies:
     - TFG-kenflohua
 

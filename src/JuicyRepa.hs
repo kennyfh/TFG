@@ -44,6 +44,14 @@ repaToJuicy img = generateImage func w h
                   b' = fromIntegral $ b ! (Z :. x :. y)
                in PixelRGB8 r' g' b'
 
+
+channelToJcy :: Channel Pixel8 -> Image Pixel8  
+channelToJcy img = generateImage func w h
+    where Z :. w :. h = extent img
+          func x y = img ! (Z :. x :. y)
+
+
+
 {-- TEST --}
 test :: IO ()
 test  = do

@@ -12,14 +12,13 @@ import Control.Parallel.Strategies
 import System.TimeIt
 import Data.Vector as V
 import JuicyRepa
--- import Juicy
+import Juicy
 import Control.Parallel
 test :: IO ()
 test = do
     -- Prueba Histogramas
-    img <- readImageIntoRepa "saitama.png"
-    print $ generateHists img
-
+    -- img <- readImageIntoRepa "saitama.png"
+    -- print $ generateHists img
 
     -- let xs = R.computeS $ R.fromFunction (Z:.25) (\(Z:.i) -> i :: Int) ::(Array U DIM1 Int)
     -- let asd = R.extract (Z :. 0) (Z :. 5) xs
@@ -34,8 +33,14 @@ test = do
     -- savePngImage "saitamanew.png" du
 
     {--Pruebas 1 canal --}
-    -- img <- readImageJuicy "saitama.png"
+    img <- readImageJuicy "saitama.png"
     -- channel <- channeljuicyToRepa $ extractChannel 0 img
+    -- ax <- prom channel
+    -- ax2 <- applyStencil edgeKernel ax
+    -- ax3 <- applyStencil edgeKernel ax2
+    -- ax4 <- applyStencil edgeKernel ax3
+    -- asd <- dem ax4
+    -- savePngImage "asaaaaa.png" (ImageY8 $ channelToJcy asd)
     -- let asd = generateH channel
     -- putStrLn "AAAAAAAAAA"
     -- print asd
@@ -101,24 +106,32 @@ generateHists xs =
 -- generateH :: Channel Int -> HVector
 -- generateH band =  L.foldr1 (V.zipWith (+)) (generateR band) -- TODO: Pararelizar esto
 
--- TODO: revisar esto
+-- TODO: Está hecho de forma paralela
 generateH :: Channel Int -> HVector
 generateH band = pfold (V.zipWith (+)) (generateR band)
 
--- TODO: Paralelizar esto usando map 
+-- -- TODO: Paralelizar esto usando map 
+-- generateR :: Channel Int -> [HVector]
+-- generateR band = [generateR2 band i | i<-[0..w-1]]
+--     where (Z :. w :. h) =  R.extent band
+
 generateR :: Channel Int -> [HVector]
-generateR band = [generateR2 band i | i<-[0..w-1]]
-    where (Z :. w :. h) =  R.extent band
-    
+generateR band =
+    let (Z :. w :. h) = R.extent band
+        bs = Prelude.map (generateR2 band) [0..w-1]
+        cs = bs `using` parList rdeepseq
+        in cs
+
 
 generateR2 :: Channel Int -> Int -> Vector Int
 generateR2 band i=
     let zero = V.replicate 256 0 -- O(n)
         fila =  R.toList $ R.slice band  (Any :. (i::Int) :. All) -- Seleccionamos la Fila [12,3,4,4,5]
-        l = L.zip fila [1,1..] 
+        l = L.zip fila [1,1..]
     in V.accum (+) zero l -- Crearemos el histograma con los valores correspondientes
 
 
+-- Función que nos hace un fold de manera paralela
 pfold :: (a -> a -> a) -> [a] -> a
 pfold _ [x] = x
 pfold mappend xs  = (ys `par` zs) `pseq` (ys `mappend` zs) where
@@ -146,21 +159,42 @@ generateComponentB ind = R.map (\v -> (fromIntegral (fromIntegral v ::Int) / 255
 
 
 {-- Filtro gaussiano
---}
--- type Filter a = Channel a -> IO (Channel a)
--- type Filters a = [Filter a]
+-- --}
 
--- gaussStencil :: Stencil DIM2 Int
--- gaussStencil =
---     [stencil2| 2 4 5 4 2
---                4 9 12 9 4
---                5 12 15 12 5
---                4 9 12 9 4
---                2 4 5 4 2 |]
+--Tipos de datos utilizados en el paquete JuicyRepa
+-- type Channel a = Array U DIM2 a
+-- type ImgRGB = [Channel Int]
+-- type ImgA = Channel Float
 
--- applyStencil :: Stencil DIM2 Int -> Filter Int
--- applyStencil stencil = computeP . mapStencil2 (BoundConst 0) stencil
 
--- passes :: Int -> Filter Int -> Filter Int
--- passes 1 filter = filter
--- passes n filter = filter >=> passes (n-1) filter
+prom :: Channel Int -> IO (Channel Float)
+prom  = computeP . R.map func
+    where func :: Int -> Float
+          func x = fromIntegral x
+
+
+dem :: Channel Float -> IO (Channel Pixel8)
+dem =  computeP . R.map ffs
+    where ffs :: Float -> Pixel8
+          ffs x = fromIntegral (truncate x :: Int)
+          
+applyStencil :: Stencil DIM2 Float -> Channel Float -> IO (Channel Float)
+applyStencil st = computeP . mapStencil2 (BoundConst 0) st
+
+
+edgeKernel :: Stencil DIM2 Float 
+edgeKernel =
+        [stencil2| 0 1 0
+                   1 -4 1
+                   0 1 0 |]
+
+
+gaussKernel :: Stencil DIM2 Float  
+gaussKernel =
+    [stencil2| 2 4 5 4 2
+               4 9 12 9 4
+               5 12 15 12 5
+               4 9 12 9 4
+               2 4 5 4 2 |]
+
+
