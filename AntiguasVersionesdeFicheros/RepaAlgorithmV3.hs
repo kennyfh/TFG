@@ -10,43 +10,18 @@ import Data.Array.Repa.Stencil.Dim2
 import Control.Monad
 import Control.Parallel.Strategies
 import Data.Vector as V hiding (mapM)
-import Data.Array.Repa.Repr.Unboxed as U
 import JuicyRepa
 import Juicy
 import Control.Parallel
 
-{--
-  _____                _   
- |_   _|   ___   ___  | |_ 
-   | |    / _ \ / __| | __|
-   | |   |  __/ \__ \ | |_ 
-   |_|    \___| |___/  \__|
-                           
---}
+
 
 test :: IO ()
 test = do
-    putStrLn "Iniciando Test Fichero Repa.hs"
     img <- readImageIntoRepa "saitama.png"
-    {-FIltro Gaussiano-}
-    -- asd <- mapM (promote >=> passes 2 gaussFilter >=> demote) img
-    -- savePngImage "axxa.png" (ImageRGB8 $ repaToJuicy asd)
-
-    {-Histograma (Sequence)-}
-    -- hstSequence <- generateHistograms <$> mapM promoteInt img
-    -- print hstSequence
-
-    {-Histograma (Vector)-}
-    -- hstVector <- generateHists <$> mapM promoteInt img
-    -- print hstVector
-
-
-    {-Black and White-}
-    blackAndWhite <- toGrayScale img
-    savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
-
-    putStrLn "El test ha ido correctamente"
-    
+    asd <- mapM (promote >=> passes 2 gaussFilter >=> demote) img
+    savePngImage "axxa.png" (ImageRGB8 $ repaToJuicy asd)
+   
 
 promote :: Monad m => Channel Pixel8 -> m (Channel Float)
 promote  = computeP . R.map func
@@ -63,26 +38,8 @@ demote =  computeP . R.map func
           func x = fromIntegral (truncate x :: Int)
 {-# NOINLINE demote #-}
 
-promoteInt :: Channel Pixel8 -> IO (Channel Int)
-promoteInt = computeP . R.map func
-    where  {-# INLINE func #-}
-           func :: Pixel8 -> Int 
-           func x  = fromIntegral x
-{-# NOINLINE promoteInt #-}
 
--- promotesToInt :: ImgRGB Pixel8 -> IO (ImgRGB Int)
--- promotesToInt = mapM promoteInt
---     where promoteInt :: Channel Pixel8 -> IO (Channel Int)
---           promoteInt = computeP . R.map func
---             where  func :: Pixel8 -> Int 
---                    func x  = fromIntegral x
 
--- demotesInt :: ImgRGB Int -> IO (ImgRGB Pixel8)
--- demotesInt = mapM demoteInt
---     where demoteInt :: Channel Int -> IO (Channel Pixel8)
---           demoteInt = computeP . R.map func
---             where func :: Int -> Pixel8
---                   func x = fromIntegral x
 
 {--
   _   _   _         _                                              
@@ -137,24 +94,32 @@ type HVectors = [HVector]
 
 generateHists :: ImgRGB Int-> [HVector]
 generateHists xs =
-    let bs = Prelude.map generateHist xs
+    let bs = Prelude.map generateH xs
         cs = bs `using` parList rdeepseq
         in cs
+
+-- generateH :: Channel Int -> HVector
+-- generateH band =  L.foldr1 (V.zipWith (+)) (generateR band) -- TODO: Pararelizar esto
 
 -- TODO: Está hecho de forma paralela
-generateHist :: Channel Int -> HVector
-generateHist band = pfold (V.zipWith (+)) (generateRows band)
+generateH :: Channel Int -> HVector
+generateH band = pfold (V.zipWith (+)) (generateR band)
 
-generateRows :: Channel Int -> [HVector]
-generateRows band =
+-- -- TODO: Paralelizar esto usando map 
+-- generateR :: Channel Int -> [HVector]
+-- generateR band = [generateR2 band i | i<-[0..w-1]]
+--     where (Z :. w :. h) =  R.extent band
+
+generateR :: Channel Int -> [HVector]
+generateR band =
     let (Z :. w :. h) = R.extent band
-        bs = Prelude.map (generateRow band) [0..w-1]
+        bs = Prelude.map (generateR2 band) [0..w-1]
         cs = bs `using` parList rdeepseq
         in cs
 
 
-generateRow :: Channel Int -> Int -> Vector Int
-generateRow band i=
+generateR2 :: Channel Int -> Int -> Vector Int
+generateR2 band i=
     let zero = V.replicate 256 0 -- O(n)
         fila =  R.toList $ R.slice band  (Any :. (i::Int) :. All) -- Seleccionamos la Fila [12,3,4,4,5]
         l = L.zip fila [1,1..]
@@ -182,36 +147,15 @@ FORMULA PARA SACAR LA LUMINOSIDAD
     (https://en.wikipedia.org/wiki/Grayscale)
 -}
 
--- 1º Version usando zipwith
--- toGrayScale :: ImgRGB Int -> IO (Channel Float)
--- toGrayScale img = R.computeP $ R.zipWith (+) b (R.zipWith (+) r g)
---     where r = generateComponentB 0 (L.head img)
---           g = generateComponentB 1 (img !! 1)
---           b = generateComponentB 2 (L.last img)
+toGrayScale :: ImgRGB Int -> IO (Channel Float)
+toGrayScale img = R.computeP $ R.zipWith (+) b (R.zipWith (+) r g)
+    where r = generateComponentB 0 (L.head img)
+          g = generateComponentB 1 (img !! 1)
+          b = generateComponentB 2 (L.last img)
 
--- generateComponentB :: Int -> Channel Int -> Array D DIM2 Float
--- generateComponentB ind = R.map (\v -> (fromIntegral (fromIntegral v ::Int) / 255)*val)
---     where val = [0.2989,0.5870,0.1140] !! ind
-
--- 2º Version usando zip3
-
--- floatLuminanceOfRGB8 :: (Float, Float, Float) -> Float
--- {-# INLINE floatLuminanceOfRGB8 #-}
--- floatLuminanceOfRGB8 (r, g, b) = (r / 255) * 0.3 + (g / 255) * 0.59 + (b / 255) * 0.11
-
--- https://hackage.haskell.org/package/repa-algorithms-3.4.0.2/docs/src/Data-Array-Repa-Algorithms-Pixel.html
-floatLuminanceOfRGB8 :: (Pixel8, Pixel8, Pixel8) -> Float
-{-# INLINE floatLuminanceOfRGB8 #-}
-floatLuminanceOfRGB8 (r, g, b)
- = let  r'      = fromIntegral (fromIntegral r) / 255
-        g'      = fromIntegral (fromIntegral g) / 255
-        b'      = fromIntegral (fromIntegral b) / 255
-   in   r' * 0.3 + g' * 0.59 + b' * 0.11
-
-toGrayScale :: ImgRGB Pixel8 -> IO (Channel Float)
-toGrayScale [r,g,b] = R.computeP . R.map floatLuminanceOfRGB8  $ U.zip3 r g b
-toGrayScale _ = error "No se puede hacer debido a que no hay los canales suficientes para realizar el blanco y negro"
-{-# NOINLINE toGrayScale #-}
+generateComponentB :: Int -> Channel Int -> Array D DIM2 Float
+generateComponentB ind = R.map (\v -> (fromIntegral (fromIntegral v ::Int) / 255)*val)
+    where val = [0.2989,0.5870,0.1140] !! ind
 
 
 {-- 

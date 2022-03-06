@@ -5,57 +5,51 @@ module JuicyRepa where
 import Juicy
 import Codec.Picture
 import Data.Array.Repa
+import Data.Array.Repa.Repr.Unboxed as U
 import Codec.Picture.Types
 import Control.Monad (forM)
 
 {-- TIPOS DE DATOS UTILIZADOS--}
 type Channel a = Array U DIM2 a
-type ImgRGB = [Channel Int]
-type ImgA = Channel Float
+type ImgRGB a = [Channel a]
 
 {-- FUNCIONES--}
-{-Función que nos permite extraer los canales RGB-}
-extractChannel :: Int-> Image PixelRGB8 -> Image Pixel8
-extractChannel 0 img= extractComponent PlaneRed img
-extractChannel 1 img = extractComponent PlaneGreen img
-extractChannel 2 img = extractComponent PlaneBlue img
-extractChannel _ img = undefined --no tenemos más canales
 
-channeljuicyToRepa :: Image Pixel8-> IO (Channel Int)
-channeljuicyToRepa img@Image{imageWidth=imageWidth, imageHeight=imageHeight, imageData=imageData}=
-    computeP $ fromFunction (Z :. imageWidth :. imageHeight) (\(Z :. x :. y)-> fromIntegral $ pixelAt img x y)
+jcyToRepa :: Monad m => Image PixelRGB8 -> m (Channel (Pixel8,Pixel8,Pixel8))
+jcyToRepa img@Image{imageWidth=imageWidth, imageHeight=imageHeight, imageData=imageData} =
+    computeP $ fromFunction (Z :. imageWidth :. imageHeight) (\(Z :. x :. y) ->
+       let (PixelRGB8 r g b) = pixelAt img x y
+       in (r, g, b))
 
-listOfBands :: Image PixelRGB8 -> [Image Pixel8]
-listOfBands img = [extractChannel i img | i<-[0..2]]
-
-readImageIntoRepa :: FilePath -> IO ImgRGB
+readImageIntoRepa :: FilePath -> IO (ImgRGB Pixel8)
 readImageIntoRepa path = do
-    img <- readImageJuicy path
-    let xs = listOfBands img
-    forM xs channeljuicyToRepa
+    a1 <- readImageJuicy path -- Image PixelRGB8
+    a2 <- jcyToRepa a1 -- Channel (Pixel8,Pixel8,Pixel8)
+    let (r,g,b) = U.unzip3 a2 -- unzip -> Dada un array de 3-tupla, los divide en 3 arrays distintos O(1)
+    return [r,g,b]
+   
 
-repaToJuicy :: ImgRGB -> Image PixelRGB8 
+repaToJuicy :: ImgRGB Pixel8 -> Image PixelRGB8 
 repaToJuicy img = generateImage func w h
     where [r,g,b] = img
           Z :. w :. h = extent r
           func x y = 
-              let r' = fromIntegral $ r ! (Z :. x :. y)
-                  g' = fromIntegral $  g ! (Z :. x :. y)
-                  b' = fromIntegral $ b ! (Z :. x :. y)
+              let r' =  r ! (Z :. x :. y)
+                  g' =  g ! (Z :. x :. y)
+                  b' =  b ! (Z :. x :. y)
                in PixelRGB8 r' g' b'
 
 
-channelToJcy :: Channel Pixel8 -> Image Pixel8  
-channelToJcy img = generateImage func w h
+exportBW :: Channel Float -> Image PixelF  
+exportBW img = generateImage func w h
     where Z :. w :. h = extent img
           func x y = img ! (Z :. x :. y)
 
 
-
 {-- TEST --}
-test :: IO ()
-test  = do
-    test <- readImageJuicy "saitama.png"
-    
-    
-    putStrLn "Hello World"
+-- test :: IO ()
+-- test  = do
+--     -- test <- readImageJuicy "saitama.png"
+--     test <- readImageIntoRepa "saitama.png"
+--     print $ head test
+--     putStrLn "Hello World"

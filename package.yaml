@@ -42,6 +42,7 @@ dependencies:
 - gtk2hs-buildtools
 - gtk
 - accelerate-llvm-ptx
+- colour-accelerate
 
 library:
   source-dirs: src

@@ -16,3 +16,11 @@ gKernel :: Stencil DIM2 Int
 gKernel = [stencil2| 1 2 1
                      2 4 2
                      1 2 1 |]
+
+
+-- demote :: Monad m => Channel Float -> m (Channel Pixel8)
+-- demote =  computeP . R.map func
+--     where {-# INLINE func #-}
+--           func :: Float -> Pixel8
+--           func x = fromIntegral (truncate x :: Int)
+-- {-# NOINLINE demote #-}

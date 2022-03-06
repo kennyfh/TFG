@@ -130,6 +130,13 @@ packages:
       sha256: cdf6f84fbcf939b86492e85fe680902c90201493f27c944c593982fd4b1a23d1
   original:
     hackage: nvvm-0.10.0.0@sha256:387b3406b66ed5d8c1f0d8d498b8508fe2dade6e3517d1bfaac7d6fe646a336a,2440
+- completed:
+    hackage: colour-accelerate-0.4.0.0@sha256:de76eebd743e1ad492c7577534f7c8224ec8178f310ee316a35e18372395d1b7,1706
+    pantry-tree:
+      size: 14789
+      sha256: 4e5b4451bfa98c3442d12e2d9b404aa21b32d0b37b7b36b02bdf275af132d27f
+  original:
+    hackage: colour-accelerate-0.4.0.0@sha256:de76eebd743e1ad492c7577534f7c8224ec8178f310ee316a35e18372395d1b7,1706
 snapshots:
 - completed:
     size: 586120
