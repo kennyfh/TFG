@@ -21,6 +21,16 @@ import Foreign.C (CInt)
 {-- FUNCIONES--}
 
 
+{-
+  _                                    
+ (_)  _ __ ___     __ _    __ _    ___ 
+ | | | '_ ` _ \   / _` |  / _` |  / _ \
+ | | | | | | | | | (_| | | (_| | |  __/
+ |_| |_| |_| |_|  \__,_|  \__, |  \___|
+                          |___/        
+
+-}
+
 -- Función genérica que nos lee las imágenes en RGB8 en formato
 -- JuicyPixels
 readImageJuicy :: FilePath -> IO (Image PixelRGB8)
@@ -28,7 +38,17 @@ readImageJuicy path = do
     img <- readImage path
     case img of
         Left e -> fail e
-        Right img -> return $ convertRGB8 img
+        Right img -> return $ convertRGB8 img -- En este proyecto se trabaja con RGB8
+
+
+{-
+  _____                                         
+ |  ___|  _ __    __ _   _ __ ___     ___   ___ 
+ | |_    | '__|  / _` | | '_ ` _ \   / _ \ / __|
+ |  _|   | |    | (_| | | | | | | | |  __/ \__ \
+ |_|     |_|     \__,_| |_| |_| |_|  \___| |___/
+                                                
+-}
 
 {--------------------------------------------------------------------------------------------
 getAllFrames

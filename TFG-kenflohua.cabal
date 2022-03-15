@@ -39,14 +39,15 @@ library
       JuicyPixels
     , accelerate
     , accelerate-io-JuicyPixels
+    , accelerate-io-repa
     , accelerate-llvm-ptx
     , base >=4.7 && <5
-    , colour-accelerate
     , containers
     , ffmpeg-light
     , gtk
     , gtk2hs-buildtools
     , parallel
+    , random
     , repa
     , timeit
     , vector
@@ -64,14 +65,15 @@ executable TFG-kenflohua-exe
     , TFG-kenflohua
     , accelerate
     , accelerate-io-JuicyPixels
+    , accelerate-io-repa
     , accelerate-llvm-ptx
     , base >=4.7 && <5
-    , colour-accelerate
     , containers
     , ffmpeg-light
     , gtk
     , gtk2hs-buildtools
     , parallel
+    , random
     , repa
     , timeit
     , vector
@@ -90,14 +92,15 @@ test-suite TFG-kenflohua-test
     , TFG-kenflohua
     , accelerate
     , accelerate-io-JuicyPixels
+    , accelerate-io-repa
     , accelerate-llvm-ptx
     , base >=4.7 && <5
-    , colour-accelerate
     , containers
     , ffmpeg-light
     , gtk
     , gtk2hs-buildtools
     , parallel
+    , random
     , repa
     , timeit
     , vector

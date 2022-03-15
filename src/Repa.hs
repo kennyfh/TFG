@@ -14,7 +14,7 @@ import Data.Array.Repa.Repr.Unboxed as U
 import JuicyRepa
 import Juicy
 import Control.Parallel
-
+import System.Random
 {--
   _____                _   
  |_   _|   ___   ___  | |_ 
@@ -40,10 +40,16 @@ test = do
     -- hstVector <- generateHists <$> mapM promoteInt img
     -- print hstVector
 
-
     {-Black and White-}
     blackAndWhite <- toGrayScale img
     savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
+
+    img2 <- readImageIntoRepa "NZ6DR.jpg"
+    rojo <- promote $  L.head img2
+    aa <- passes 4 edgeFilter rojo
+    aa2 <- demote aa
+    savePngImage "example.png" (ImageY8 $ exportBand aa2)
+
 
     putStrLn "El test ha ido correctamente"
     
@@ -141,7 +147,6 @@ generateHists xs =
         cs = bs `using` parList rdeepseq
         in cs
 
--- TODO: Está hecho de forma paralela
 generateHist :: Channel Int -> HVector
 generateHist band = pfold (V.zipWith (+)) (generateRows band)
 
@@ -200,16 +205,16 @@ FORMULA PARA SACAR LA LUMINOSIDAD
 -- floatLuminanceOfRGB8 (r, g, b) = (r / 255) * 0.3 + (g / 255) * 0.59 + (b / 255) * 0.11
 
 -- https://hackage.haskell.org/package/repa-algorithms-3.4.0.2/docs/src/Data-Array-Repa-Algorithms-Pixel.html
-floatLuminanceOfRGB8 :: (Pixel8, Pixel8, Pixel8) -> Float
-{-# INLINE floatLuminanceOfRGB8 #-}
-floatLuminanceOfRGB8 (r, g, b)
+luminance :: (Pixel8, Pixel8, Pixel8) -> Float
+{-# INLINE luminance #-}
+luminance (r, g, b)
  = let  r'      = fromIntegral (fromIntegral r) / 255
         g'      = fromIntegral (fromIntegral g) / 255
         b'      = fromIntegral (fromIntegral b) / 255
    in   r' * 0.3 + g' * 0.59 + b' * 0.11
 
 toGrayScale :: ImgRGB Pixel8 -> IO (Channel Float)
-toGrayScale [r,g,b] = R.computeP . R.map floatLuminanceOfRGB8  $ U.zip3 r g b
+toGrayScale [r,g,b] = R.computeP . R.map luminance  $ U.zip3 r g b
 toGrayScale _ = error "No se puede hacer debido a que no hay los canales suficientes para realizar el blanco y negro"
 {-# NOINLINE toGrayScale #-}
 
@@ -242,6 +247,10 @@ normalize n = computeP . R.map (/ n)
 gaussFilter :: Filter
 gaussFilter = applyStencil gaussKernel >=> normalize 159
 
+
+edgeFilter :: Filter
+edgeFilter =  applyStencil edgeKernel
+
 {-Kernels -}
 edgeKernel :: Stencil DIM2 Float
 edgeKernel =
@@ -257,4 +266,21 @@ gaussKernel =
                5 12 15 12 5
                4 9 12 9 4
                2 4 5 4 2 |]
+
+--Filtro Media
+meanKernel :: Stencil DIM2 Float
+meanKernel =
+    [stencil2|  1 1 1
+                1 1 1 
+                1 1 1 |]
+
+
+
+
+-- --Generate a infinite random coordinates
+-- randCoords :: StdGen -> Int -> Int -> [(Int,Int)]
+-- randCoords a w h = (rnd1,rnd2) : randCoords g2 w h
+--     where (rnd1, g1) = randomR (0, w) a
+--           (rnd2, g2) = randomR (0, h) g1
+
 

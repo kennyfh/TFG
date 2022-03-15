@@ -46,6 +46,13 @@ exportBW img = generateImage func w h
           func x y = img ! (Z :. x :. y)
 
 
+exportBand :: Channel Pixel8 -> Image Pixel8
+exportBand img = generateImage func w h
+    where Z :. w :. h = extent img
+          func x y = img ! (Z :. x :. y)
+
+
+
 {-- TEST --}
 -- test :: IO ()
 -- test  = do

@@ -131,12 +131,12 @@ packages:
   original:
     hackage: nvvm-0.10.0.0@sha256:387b3406b66ed5d8c1f0d8d498b8508fe2dade6e3517d1bfaac7d6fe646a336a,2440
 - completed:
-    hackage: colour-accelerate-0.4.0.0@sha256:de76eebd743e1ad492c7577534f7c8224ec8178f310ee316a35e18372395d1b7,1706
+    hackage: accelerate-io-repa-0.1.0.0@sha256:740babfe194e8d3f3eb57831f598502f91fc1a42055c65238b52c9a202dc0333,1380
     pantry-tree:
-      size: 14789
-      sha256: 4e5b4451bfa98c3442d12e2d9b404aa21b32d0b37b7b36b02bdf275af132d27f
+      size: 342
+      sha256: 488618c2a61489590e967d52f65be03149c15ab6c1dd02515b4a6178e5e9b00f
   original:
-    hackage: colour-accelerate-0.4.0.0@sha256:de76eebd743e1ad492c7577534f7c8224ec8178f310ee316a35e18372395d1b7,1706
+    hackage: accelerate-io-repa-0.1.0.0@sha256:740babfe194e8d3f3eb57831f598502f91fc1a42055c65238b52c9a202dc0333,1380
 snapshots:
 - completed:
     size: 586120

@@ -3,13 +3,14 @@ module Main where
 import JuicyRepa as Rtest
 import JuicyAccelerate as Atest
 import Repa as Rx
+import Accelerate as Ax
 import PruebasRandom as Rn
 -- MAIN 
 main :: IO ()
 main =  do
     -- Rn.test
-    Rx.test 
-    -- Rn.test
+    -- Rx.test 
+    Ax.test
     -- testImage
     -- putStrLn "Bienvenido, introduzca la ruta del video para resumir"
     -- path <- getLine
