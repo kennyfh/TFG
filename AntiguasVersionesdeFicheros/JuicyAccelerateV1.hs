@@ -17,7 +17,7 @@ import Codec.Picture
 type RGB = (Pixel8,Pixel8,Pixel8)
 {-- FUNCIONES--}
 
-readImageAcc :: FilePath -> IO (Matrix PixelRGB8_)
+readImageAcc :: FilePath -> IO (Matrix PixelRGB8) --[PixelRGB8 1 1 1 , PixelRGB8 2 3 4]
 readImageAcc path =   arrayOfImage <$> readImageJuicy path
 
 convertLALA :: Matrix PixelRGB8 -> Matrix RGB

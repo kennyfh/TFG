@@ -15,20 +15,20 @@ import Data.Array.Accelerate.Interpreter as I
 --}
 
 
--- gHistogram :: Acc (Matrix (Pixel8, Pixel8, Pixel8))-> (Acc (Vector Int), Acc (Vector Int), Acc (Vector Int))
--- gHistogram arr =
---     let (r,g,b) = A.unzip3 arr -- (Acc (Array sh a), Acc (Array sh b), Acc (Array sh c)) 
---     in (compute $ histogram $ flatten $ promoteInt r, compute $ histogram $ flatten $ promoteInt g,compute $ histogram $ flatten $ promoteInt b)
+gHistogram :: Acc (Matrix (Pixel8, Pixel8, Pixel8))-> (Acc (Vector Int), Acc (Vector Int), Acc (Vector Int))
+gHistogram arr =
+    let (r,g,b) = A.unzip3 arr -- (Acc (Array sh a), Acc (Array sh b), Acc (Array sh c)) 
+    in (compute $ histogram $ flatten $ promoteInt r, compute $ histogram $ flatten $ promoteInt g,compute $ histogram $ flatten $ promoteInt b)
 
--- histogram :: Acc (Vector Int) -> Acc (Vector Int)
--- histogram img =
---     let zeros = fill (constant (Z:.256)) 0
---         ones  = fill (shape img)         1
---         in permute (+) zeros (\ind -> Just_ (I1 (img!ind))) ones
+histogram :: Acc (Vector Int) -> Acc (Vector Int)
+histogram img =
+    let zeros = fill (constant (Z:.256)) 0
+        ones  = fill (shape img)         1
+        in permute (+) zeros (\ind -> Just_ (I1 (img!ind))) ones
 
 
--- promoteInt :: Acc (Matrix Pixel8) -> Acc (Matrix Int)
--- promoteInt = A.map A.fromIntegral
+promoteInt :: Acc (Matrix Pixel8) -> Acc (Matrix Int)
+promoteInt = A.map A.fromIntegral
 
 
 -- {- 
@@ -44,13 +44,13 @@ import Data.Array.Accelerate.Interpreter as I
 
 -- -}
 
--- grayScale :: Acc (Matrix (Pixel8,Pixel8,Pixel8)) -> Acc (Matrix Float)
--- grayScale = A.map (\ pix ->
---     let (r,g,b) = unlift pix
---         r'      =  A.fromIntegral r / 255
---         g'      = A.fromIntegral g / 255
---         b'      = A.fromIntegral b / 255
---         in r' * 0.3 + g' * 0.59 + b' * 0.11)
+grayScale :: Acc (Matrix (Pixel8,Pixel8,Pixel8)) -> Acc (Matrix Float)
+grayScale = A.map (\ pix ->
+    let (r,g,b) = unlift pix
+        r'      =  A.fromIntegral r / 255
+        g'      = A.fromIntegral g / 255
+        b'      = A.fromIntegral b / 255
+        in r' * 0.3 + g' * 0.59 + b' * 0.11)
 
 -- {-- 
 
@@ -68,15 +68,15 @@ test :: IO ()
 test  =  do
     putStrLn "Iniciando Test Fichero Accelerate.hs"
     {--Leyendo imágenes --}
-    -- img <- readImageAcc "saitama.png"
+    img <- readImageAcc "saitama.png"
 
     {--Creación Histograma--}
-    -- let (r,g,b) = gHistogram (use img)
-    -- print (run r, run g , run b)
+    let (r,g,b) = gHistogram (use img)
+    print (run r, run g , run b)
 
     {--Blanco y Negro--}
-    -- let asd = run $ grayScale (use img)
-    -- savePngImage "ejemplo000000.png" (ImageYF $ toJcyBandW asd)
+    let asd = run $ grayScale (use img)
+    savePngImage "ejemplo000000.png" (ImageYF $ toJcyBandW asd)
 
     {--Filtros--}
 
