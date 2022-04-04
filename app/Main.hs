@@ -10,7 +10,7 @@ main :: IO ()
 main =  do
     -- Rn.test
     -- Rx.test 
-    Atest.test
+    Ax.test
     -- testImage
     -- putStrLn "Bienvenido, introduzca la ruta del video para resumir"
     -- path <- getLine

@@ -3,7 +3,20 @@ module Accelerate where
 import JuicyAccelerate
 import Codec.Picture
 import Data.Array.Accelerate as A
-import Data.Array.Accelerate.Interpreter as I
+import Data.Array.Accelerate.Interpreter as I -- TODO: modificar esto por el interprete de CUDA 
+
+
+promoteInt :: Acc (Matrix Pixel8) -> Acc (Matrix Int)
+promoteInt = A.map A.fromIntegral
+
+demoteInt :: Acc (Matrix Int) -> Acc (Matrix Pixel8)
+demoteInt =  A.map A.fromIntegral
+
+promoteFloat :: Acc (Matrix Pixel8) -> Acc (Matrix Float)
+promoteFloat = A.map A.fromIntegral
+
+demoteFloat :: Acc (Matrix Float) -> Acc (Matrix Pixel8)
+demoteFloat =  A.map A.truncate
 
 {--
   _   _   _         _                                              
@@ -27,8 +40,8 @@ histogram img =
         in permute (+) zeros (\ind -> Just_ (I1 (img!ind))) ones
 
 
-promoteInt :: Acc (Matrix Pixel8) -> Acc (Matrix Int)
-promoteInt = A.map A.fromIntegral
+
+
 
 
 -- {- 
@@ -76,7 +89,7 @@ test  =  do
 
     {--Blanco y Negro--}
     let asd = run $ grayScale (use img)
-    savePngImage "ejemplo000000.png" (ImageYF $ toJcyBandW asd)
+    savePngImage "saitamagrayscale.png" (ImageYF $ greyToJcy asd)
 
     {--Filtros--}
 

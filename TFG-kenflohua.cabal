@@ -29,7 +29,6 @@ library
       Juicy
       JuicyAccelerate
       JuicyRepa
-      PruebasRandom
       Repa
   other-modules:
       Paths_TFG_kenflohua
