@@ -39,11 +39,6 @@ histogram img =
         ones  = fill (shape img)         1
         in permute (+) zeros (\ind -> Just_ (I1 (img!ind))) ones
 
-
-
-
-
-
 -- {- 
 --   ____     ___    __        __
 --  | __ )   ( _ )   \ \      / /
@@ -93,4 +88,4 @@ test  =  do
 
     {--Filtros--}
 
-    putStrLn "ASD"
+    putStrLn "Fin del Test fichero Acelerate.hs"
