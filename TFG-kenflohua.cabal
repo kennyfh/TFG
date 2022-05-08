@@ -29,7 +29,9 @@ library
       Juicy
       JuicyAccelerate
       JuicyRepa
+      Kmeans
       Repa
+      VideoSummarization
   other-modules:
       Paths_TFG_kenflohua
   hs-source-dirs:

@@ -39,7 +39,7 @@ greyToJcy = imageOfArray
 {-- TEST --}
 test :: IO ()
 test  = do
-    img <- readImageAcc "saitama.png"
+    img <- readImageAcc "images/saitama.png"
     -- let xs = pp img
     -- let xs2 = imageOfArray xs
     -- savePngImage "locora.png" (ImageRGB8 xs2)

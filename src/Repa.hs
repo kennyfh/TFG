@@ -15,6 +15,8 @@ import JuicyRepa
 import Juicy
 import Control.Parallel
 import System.Random
+
+
 {--
   _____                _   
  |_   _|   ___   ___  | |_ 
@@ -277,7 +279,7 @@ meanKernel =
 
 
 
--- --Generate a infinite random coordinates
+-- Podemos generar infinitas coordenadas
 -- randCoords :: StdGen -> Int -> Int -> [(Int,Int)]
 -- randCoords a w h = (rnd1,rnd2) : randCoords g2 w h
 --     where (rnd1, g1) = randomR (0, w) a
