@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE BangPatterns  #-}
 module Repa where
 
 import Data.Array.Repa as R
@@ -30,16 +29,10 @@ import System.Random
 test :: IO ()
 test = do
     putStrLn "Iniciando Test Fichero Repa.hs"
-    -- img <- readImageIntoRepa "data/images/saitama.png"
-    img <- readImageIntoRepa "data/images/lena_color.png"
+    img <- readImageIntoRepa "saitama.png"
     {-FIltro Gaussiano-}
-    -- blurImg <- mapM (promote >=> blur 4 >=> demote) img
-    -- savePngImage "blursaitama.png" (ImageRGB8 $ repaToJuicy blurImg)
-
-    {-Filtro Sobel-}
-    imgGrey <- toGrayScale img
-    output <- sobel imgGrey
-    savePngImage "sobelrepa.png" (ImageYF $ exportBW output)
+    -- asd <- mapM (promote >=> passes 2 gaussFilter >=> demote) img
+    -- savePngImage "axxa.png" (ImageRGB8 $ repaToJuicy asd)
 
     {-Histograma (Sequence)-}
     -- hstSequence <- generateHistograms <$> mapM promoteInt img
@@ -50,14 +43,14 @@ test = do
     -- print hstVector
 
     {-Black and White-}
-    -- blackAndWhite <- toGrayScale img
-    -- savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
+    blackAndWhite <- toGrayScale img
+    savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
 
-    -- img2 <- readImageIntoRepa "NZ6DR.jpg"
-    -- rojo <- promote $  L.head img2
-    -- aa <- passes 4 edgeFilter rojo
-    -- aa2 <- demote aa
-    -- savePngImage "example.png" (ImageY8 $ exportBand aa2)
+    img2 <- readImageIntoRepa "NZ6DR.jpg"
+    rojo <- promote $  L.head img2
+    aa <- passes 4 edgeFilter rojo
+    aa2 <- demote aa
+    savePngImage "example.png" (ImageY8 $ exportBand aa2)
 
 
     putStrLn "El test ha ido correctamente"
@@ -208,6 +201,12 @@ FORMULA PARA SACAR LA LUMINOSIDAD
 --     where val = [0.2989,0.5870,0.1140] !! ind
 
 -- 2º Version usando zip3
+
+-- floatLuminanceOfRGB8 :: (Float, Float, Float) -> Float
+-- {-# INLINE floatLuminanceOfRGB8 #-}
+-- floatLuminanceOfRGB8 (r, g, b) = (r / 255) * 0.3 + (g / 255) * 0.59 + (b / 255) * 0.11
+
+-- https://hackage.haskell.org/package/repa-algorithms-3.4.0.2/docs/src/Data-Array-Repa-Algorithms-Pixel.html
 luminance :: (Pixel8, Pixel8, Pixel8) -> Float
 {-# INLINE luminance #-}
 luminance (r, g, b)
@@ -231,83 +230,59 @@ toGrayScale _ = error "No se puede hacer debido a que no hay los canales suficie
   \____|  \__,_|  \__,_| |___/ |___/ |_|  \__,_| |_| |_|   |_.__/  |_|  \__,_| |_|   
                                                                                      
 --}
+type Filter = Channel Float -> IO (Channel Float)
 
---- Para poder realizar el blur, lo primero que debemos hacer es como vamos a aplicar
--- el filtro de esto -- sigma=1, kernel_radius = 5
--- https://observablehq.com/@jobleonard/gaussian-kernel-calculater
--- [0.06136,0.24477,0.38774,0.24477,0.06136]
--- Como Stencil2 no acepta decimales, nuestra lista se quedará de la siguiente manera
-    --[1/16, 4/16,]
--- 
-
-blurX :: Monad m => Channel Float -> m (Channel Float)
-blurX img = R.computeP 
-            $ R.smap (/ 16) -- un map más eficiente
-            $ forStencil2  BoundClamp img
-              [stencil2| 1 4 6 4 1 |]
-{-# NOINLINE blurX #-}
+applyStencil :: Stencil DIM2 Float -> Filter
+applyStencil st = computeP . mapStencil2 (BoundConst 0) st
+{-# NOINLINE applyStencil #-}
 
 
-blurY :: Monad m => Channel Float -> m (Channel Float)
-blurY img =  R.computeP
-             $ R.smap(/16)
-             $ forStencil2 BoundClamp img
-               [stencil2|    1
-                             4
-                             6
-                             4
-                             1 |]
-{-# NOINLINE blurY #-}
+passes :: Int -> Filter -> Filter
+passes 1 filter = filter
+passes n filter = filter >=> passes (n-1) filter
 
 
-blur :: Monad m => Int -> Channel Float -> m (Channel Float)
-blur !steps imgInit = go steps imgInit
-    where go !0 !img = return img
-          go !n !img = 
-              do sepx <- blurX img
-                 sepy <- blurY sepx
-                 go (n-1) sepy   
-{-# NOINLINE blur #-}
+normalize :: Float -> Filter
+normalize n = computeP . R.map (/ n)
 
 
-{-
-  ____            _              _ 
- / ___|    ___   | |__     ___  | |
- \___ \   / _ \  | '_ \   / _ \ | |
-  ___) | | (_) | | |_) | |  __/ | |
- |____/   \___/  |_.__/   \___| |_|
-                                   
--}
--- https://es.wikipedia.org/wiki/Operador_Sobel#Formulaci%C3%B3n
+gaussFilter :: Filter
+gaussFilter = applyStencil gaussKernel >=> normalize 159
 
--- Cálculo de Gx
-gradX :: Monad m => Channel Float -> m (Channel Float)
-gradX img = R.computeP
-            $ forStencil2 BoundClamp img
-              [stencil2| -1 0 1
-                         -2 0 2 
-                         -1 0 1 |]
-{-# NOINLINE gradX #-}
 
--- Calculo de Gy
-gradY :: Monad m => Channel Float -> m (Channel Float)
-gradY img = R.computeP
-            $ forStencil2 BoundClamp img
-              [stencil2| -1 -2 -1
-                          0  0  0 
-                          1  2  1 |]
-{-# NOINLINE gradY #-}
--- Normalmente, Sobel usa 2 kernels 3x3, aunque según wikipedia,
--- cada kernel podemos descomponerlo en otros 2 filtros.
+edgeFilter :: Filter
+edgeFilter =  applyStencil edgeKernel
 
--- Magnitude G = Sqrt (Gx^2 + Gy^2)
-magnitude :: Float -> Float -> Float
-magnitude x y = sqrt (x*x + y*y)
+{-Kernels -}
+edgeKernel :: Stencil DIM2 Float
+edgeKernel =
+        [stencil2| 0 1 0
+                   1 -4 1
+                   0 1 0 |]
 
--- Para usar este algoritmo, en primer lugar debemos sacar la luminosidad
--- de la imagen RGB (pasarlo a blanco y negro)
-sobel :: Monad m => Channel Float -> m (Channel Float)
-sobel img = do
-    gx <- gradX img
-    gy <- gradY img
-    R.computeP $ R.zipWith (magnitude) gx gy 
+
+gaussKernel :: Stencil DIM2 Float
+gaussKernel =
+    [stencil2| 2 4 5 4 2
+               4 9 12 9 4
+               5 12 15 12 5
+               4 9 12 9 4
+               2 4 5 4 2 |]
+
+--Filtro Media
+meanKernel :: Stencil DIM2 Float
+meanKernel =
+    [stencil2|  1 1 1
+                1 1 1 
+                1 1 1 |]
+
+
+
+
+-- Podemos generar infinitas coordenadas
+-- randCoords :: StdGen -> Int -> Int -> [(Int,Int)]
+-- randCoords a w h = (rnd1,rnd2) : randCoords g2 w h
+--     where (rnd1, g1) = randomR (0, w) a
+--           (rnd2, g2) = randomR (0, h) g1
+
+

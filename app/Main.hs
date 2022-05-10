@@ -10,5 +10,5 @@ import VideoSummarization as VS
 -- MAIN 
 main :: IO ()
 main =  do
-    Ax.test
+    Rx.test
     putStrLn  "Fin del Main"

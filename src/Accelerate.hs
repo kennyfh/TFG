@@ -90,6 +90,7 @@ convolve1x5 kernel ((_,a,_), (_,b,_), (_,c,_), (_,d,_), (_,e,_))
   = P.sum $ P.zipWith (*) kernel [a,b,c,d,e]
 
 -- Para realizar el blur, una forma en vez de hacer un kernel 5x5 a cada elemento, podemos realizar 
+-- 2 pasadas por cada eje usando 
 blur :: (P.Num a, Elt a, P.Fractional a, P.Num (Exp a)) => Acc (Matrix a) -> Acc (Matrix a)
 blur = stencil (convolve5x1 gaussian) clamp . stencil (convolve1x5 gaussian) clamp
     where gaussian = P.map A.constant [0.06136,0.24477,0.38774,0.24477,0.06136]
@@ -111,6 +112,7 @@ test  =  do
     savePngImage "saitamagrayscale.png" (ImageYF $ greyToJcy gr)
 
     {--Filtros--}
+
     let blr = run $ blur $ blur $ blur (use gr)
     savePngImage "axaa.png" (ImageYF $ greyToJcy blr)
 

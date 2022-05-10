@@ -1,4 +1,4 @@
-module JuicyRepa where
+module JuicyRepaV1 where
 
 
 {-- MODULOS IMPORTADOS-}
