@@ -95,12 +95,51 @@ blur :: (P.Num a, Elt a, P.Fractional a, P.Num (Exp a)) => Acc (Matrix a) -> Acc
 blur = stencil (convolve5x1 gaussian) clamp . stencil (convolve1x5 gaussian) clamp
     where gaussian = P.map A.constant [0.06136,0.24477,0.38774,0.24477,0.06136]
 
+-- TODO: modificar blur para realizar varias iteraciones
+
+
+{-
+  ____            _              _ 
+ / ___|    ___   | |__     ___  | |
+ \___ \   / _ \  | '_ \   / _ \ | |
+  ___) | | (_) | | |_) | |  __/ | |
+ |____/   \___/  |_.__/   \___| |_|
+                                   
+El kernel del gradiente X es :
+[-1 0 1
+ -2 0 2
+ -1 0 1]
+
+El kernel del gradiente Y es :
+[-1 -2 -1
+  0  0  0
+  1  2  1]
+-}
+
+gradX :: Acc (Matrix Float) -> Acc (Matrix Float)
+gradX img = stencil gradient clamp img
+  where gradient :: Stencil3x3 Float -> Exp Float
+        gradient ((t1,_,t2)
+                 ,(l,_,r)
+                 ,(b1,_,b2)) = -t1-(2*l)-b1+t2+(2*r)+b2
+
+gradY :: Acc (Matrix Float) -> Acc (Matrix Float)
+gradY img = stencil gradient clamp img
+  where gradient :: Stencil3x3 Float -> Exp Float
+        gradient ((t1,t2,t3)
+                 ,(_,_,_)
+                 ,(b1,b2,b3)) = -t1-(2*t2)-t3+b1+(2*b2)+b3
+
+magnitude :: Acc (Matrix Float) -> Acc (Matrix Float)
+magnitude img = A.zipWith (\x y  -> A.sqrt (x*x+y*y)) (gradX img) (gradY img)
+
 
 test :: IO ()
 test  =  do
     putStrLn "Iniciando Test Fichero Accelerate.hs"
     {--Leyendo imágenes --}
-    img <- readImageAcc "images/saitama.png"
+    -- img <- readImageAcc "images/saitama.png"
+    img <- readImageAcc "data/images/lena_color.png"
 
     {--Creación Histograma--}
     -- let (r,g,b) = gHistogram (use img)
@@ -113,7 +152,10 @@ test  =  do
 
     {--Filtros--}
 
-    let blr = run $ blur $ blur $ blur (use gr)
-    savePngImage "axaa.png" (ImageYF $ greyToJcy blr)
+    -- let blr = run $ blur $ blur $ blur (use gr)
+    -- savePngImage "axaa.png" (ImageYF $ greyToJcy blr)
+
+    let sobel = run $ magnitude (use gr)
+    savePngImage "sobelAcc.png" (ImageYF $ greyToJcy sobel)
 
     putStrLn "Fin del Test fichero Acelerate.hs"
