@@ -30,6 +30,7 @@ library
       JuicyAccelerate
       JuicyRepa
       Kmeans
+      Pruebas
       Repa
       VideoSummarization
   other-modules:

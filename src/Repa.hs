@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE BangPatterns  #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Repa where
 
 import Data.Array.Repa as R
@@ -15,53 +16,10 @@ import Data.Array.Repa.Repr.Unboxed as U
 import JuicyRepa
 import Juicy
 import Control.Parallel
-import System.Random
+import Data.Array.Repa.Specialised.Dim2
+-- import System.Random
 
 
-{--
-  _____                _   
- |_   _|   ___   ___  | |_ 
-   | |    / _ \ / __| | __|
-   | |   |  __/ \__ \ | |_ 
-   |_|    \___| |___/  \__|
-                           
---}
-
-test :: IO ()
-test = do
-    putStrLn "Iniciando Test Fichero Repa.hs"
-    -- img <- readImageIntoRepa "data/images/saitama.png"
-    img <- readImageIntoRepa "data/images/lena_color.png"
-    {-FIltro Gaussiano-}
-    -- blurImg <- mapM (promote >=> blur 4 >=> demote) img
-    -- savePngImage "blursaitama.png" (ImageRGB8 $ repaToJuicy blurImg)
-
-    {-Filtro Sobel-}
-    imgGrey <- toGrayScale img
-    output <- sobel imgGrey
-    savePngImage "sobelrepa.png" (ImageYF $ exportBW output)
-
-    {-Histograma (Sequence)-}
-    -- hstSequence <- generateHistograms <$> mapM promoteInt img
-    -- print hstSequence
-
-    {-Histograma (Vector)-}
-    -- hstVector <- generateHists <$> mapM promoteInt img
-    -- print hstVector
-
-    {-Black and White-}
-    -- blackAndWhite <- toGrayScale img
-    -- savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
-
-    -- img2 <- readImageIntoRepa "NZ6DR.jpg"
-    -- rojo <- promote $  L.head img2
-    -- aa <- passes 4 edgeFilter rojo
-    -- aa2 <- demote aa
-    -- savePngImage "example.png" (ImageY8 $ exportBand aa2)
-
-
-    putStrLn "El test ha ido correctamente"
-    
 
 promote :: Monad m => Channel Pixel8 -> m (Channel Float)
 promote  = computeP . R.map func
@@ -81,23 +39,10 @@ demote =  computeP . R.map func
 promoteInt :: Channel Pixel8 -> IO (Channel Int)
 promoteInt = computeP . R.map func
     where  {-# INLINE func #-}
-           func :: Pixel8 -> Int 
+           func :: Pixel8 -> Int
            func x  = fromIntegral x
 {-# NOINLINE promoteInt #-}
 
--- promotesToInt :: ImgRGB Pixel8 -> IO (ImgRGB Int)
--- promotesToInt = mapM promoteInt
---     where promoteInt :: Channel Pixel8 -> IO (Channel Int)
---           promoteInt = computeP . R.map func
---             where  func :: Pixel8 -> Int 
---                    func x  = fromIntegral x
-
--- demotesInt :: ImgRGB Int -> IO (ImgRGB Pixel8)
--- demotesInt = mapM demoteInt
---     where demoteInt :: Channel Int -> IO (Channel Pixel8)
---           demoteInt = computeP . R.map func
---             where func :: Int -> Pixel8
---                   func x = fromIntegral x
 
 {--
   _   _   _         _                                              
@@ -216,7 +161,8 @@ luminance (r, g, b)
         b'      = fromIntegral (fromIntegral b) / 255
    in   r' * 0.3 + g' * 0.59 + b' * 0.11
 
-toGrayScale :: ImgRGB Pixel8 -> IO (Channel Float)
+-- toGrayScale :: ImgRGB Pixel8 -> IO (Channel Float)
+toGrayScale :: Monad m => ImgRGB Pixel8 -> m (Channel Float)
 toGrayScale [r,g,b] = R.computeP . R.map luminance  $ U.zip3 r g b
 toGrayScale _ = error "No se puede hacer debido a que no hay los canales suficientes para realizar el blanco y negro"
 {-# NOINLINE toGrayScale #-}
@@ -237,11 +183,11 @@ toGrayScale _ = error "No se puede hacer debido a que no hay los canales suficie
 -- https://observablehq.com/@jobleonard/gaussian-kernel-calculater
 -- [0.06136,0.24477,0.38774,0.24477,0.06136]
 -- Como Stencil2 no acepta decimales, nuestra lista se quedará de la siguiente manera
-    --[1/16, 4/16,]
+    --[1/16, 4/16,....]
 -- 
 
 blurX :: Monad m => Channel Float -> m (Channel Float)
-blurX img = R.computeP 
+blurX img = R.computeP -- Computamos todo de forma paralela (CPU)
             $ R.smap (/ 16) -- un map más eficiente
             $ forStencil2  BoundClamp img
               [stencil2| 1 4 6 4 1 |]
@@ -249,24 +195,24 @@ blurX img = R.computeP
 
 
 blurY :: Monad m => Channel Float -> m (Channel Float)
-blurY img =  R.computeP
-             $ R.smap(/16)
+blurY img =  R.computeP -- Computamos todo de forma paralela 
+             $ R.smap (/16) -- Dividimos cada pixel de la imagen entre 16
              $ forStencil2 BoundClamp img
                [stencil2|    1
                              4
                              6
                              4
-                             1 |]
+                             1 |] -- Usamos un stencil para hacer las convoluciones
 {-# NOINLINE blurY #-}
 
 
 blur :: Monad m => Int -> Channel Float -> m (Channel Float)
-blur !steps imgInit = go steps imgInit
-    where go !0 !img = return img
-          go !n !img = 
-              do sepx <- blurX img
-                 sepy <- blurY sepx
-                 go (n-1) sepy   
+blur = go -- Es equivalente a esto : blur steps imgInit = go steps imgInit
+    where go 0 !img = return img -- Si ya no podemos hacer más iteraciones, devolvemos la imagen
+          go n !img = -- En caso contrario
+              do sepx <- blurX img -- Realizamos el difuminado usando el kernel por el eje x 
+                 sepy <- blurY sepx -- Realizamos el difuminado usando como kernel del eje y
+                 go (n-1) sepy -- Y repetimos todo el proceso 
 {-# NOINLINE blur #-}
 
 
@@ -282,20 +228,20 @@ blur !steps imgInit = go steps imgInit
 
 -- Cálculo de Gx
 gradX :: Monad m => Channel Float -> m (Channel Float)
-gradX img = R.computeP
+gradX img = R.computeP -- Computamos todo de forma paralela 
             $ forStencil2 BoundClamp img
               [stencil2| -1 0 1
                          -2 0 2 
-                         -1 0 1 |]
+                         -1 0 1 |] -- Realizamos una convolución donde vamos a usar un kernel 3x3 para cada pixel de la imagen
 {-# NOINLINE gradX #-}
 
 -- Calculo de Gy
 gradY :: Monad m => Channel Float -> m (Channel Float)
-gradY img = R.computeP
+gradY img = R.computeP -- Computamos todo de forma paralela
             $ forStencil2 BoundClamp img
               [stencil2| -1 -2 -1
                           0  0  0 
-                          1  2  1 |]
+                          1  2  1 |] -- Realizamos una convolución donde vamos a usar un kernel 3x3 para cada pixel de la imagen
 {-# NOINLINE gradY #-}
 -- Normalmente, Sobel usa 2 kernels 3x3, aunque según wikipedia,
 -- cada kernel podemos descomponerlo en otros 2 filtros.
@@ -306,8 +252,159 @@ magnitude x y = sqrt (x*x + y*y)
 
 -- Para usar este algoritmo, en primer lugar debemos sacar la luminosidad
 -- de la imagen RGB (pasarlo a blanco y negro)
-sobel :: Monad m => Channel Float -> m (Channel Float)
+sobel
+    :: Monad m
+    => Channel Float -- ^ Imagen de entrada
+    -> m (Channel Float) -- ^ Imagen de salida tras haberle aplicado el filtro
 sobel img = do
-    gx <- gradX img
-    gy <- gradY img
-    R.computeP $ R.zipWith (magnitude) gx gy 
+    gx <- gradX img -- Calculamos el gradiente de X de la imagen
+    gy <- gradY img -- Calculamos el gradiente de Y de la imagen
+    R.computeP $ R.zipWith magnitude gx gy -- Realizamos G = Sqrt (Gx^2 + Gy^2) a cada
+                                           -- pixel de la imagen
+
+{-
+  _                       _                       
+ | |       __ _   _ __   | |   __ _    ___    ___ 
+ | |      / _` | | '_ \  | |  / _` |  / __|  / _ \
+ | |___  | (_| | | |_) | | | | (_| | | (__  |  __/
+ |_____|  \__,_| | .__/  |_|  \__,_|  \___|  \___|
+                 |_|                              
+
+-}
+
+{-
+   ____                                   
+  / ___|   __ _   _ __    _ __    _   _   
+ | |      / _` | | '_ \  | '_ \  | | | |  
+ | |___  | (_| | | | | | | | | | | |_| |  
+  \____|  \__,_| |_| |_| |_| |_|  \__, |  
+                                  |___/  
+-}
+
+-- Para la realización de este algoritmo, se ha adaptado gracias a los
+-- ejemplos que tiene repa en su repositorio repa-examples
+
+-- Pasos para realizar el algoritmo Canny:
+-- Suavizar la imagen utilizando el filtro gaussiano
+-- Conseguir la magnitud y orientación del gradiente
+-- Aplicar supresión no máxima (Non-max supression)
+-- Aplicar umbral de histéresis (hysteresis threshold)
+
+-- Classification of the output pixel
+orientUndef     = 0     :: Int
+orientPosDiag   = 64    :: Int
+orientVert      = 128   :: Int
+orientNegDiag   = 192   :: Int
+orientHoriz     = 255   :: Int
+
+data Edge       = None | Weak | Strong
+edge None       = 0     :: Int
+edge Weak       = 128   :: Int
+edge Strong     = 255   :: Int
+
+
+-- canny 
+--     :: Monad m 
+--     => Int -- ^ Número de pasos a dar
+--     -> Int -- ^ threshLow
+--     -> Int -- ^ threshHigh
+--     -> ImgRGB Pixel8 -- ^ Imagen que le queremos pasar
+--     -> m (Channel Float)
+-- canny steps threshLow threshHigh imgInit = 
+--     do imgGrey <- toGrayScale imgInit -- Pasamos la imagen a blanco y negro
+--        blurImg <- blur steps imgGrey -- Suavizamos la imagen usando filtro gaussiano
+--        imgGx <- gradX blurImg -- Gradiente X 
+--        imgGy <- gradY blurImg -- Gradiente Y 
+--        mag <- magDir threshLow imgGx imgGy
+--        nMS <- nonMaximumSuppression threshLow threshHigh mag
+
+
+magDir 
+    :: Monad m 
+    => Float -- ^ threshLow
+    -> Channel Float -- ^ Imagen gradiente X
+    -> Channel Float -- ^ Imagen gradiente Y
+    -> m (Channel (Float,Int)) -- ^ Salida con la magnitud y dirección de la imagen
+magDir !threshLow gx gy = R.computeP $ R.zipWith magDirAux gx gy
+    where magDirAux :: Float -> Float -> (Float,Int)
+          magDirAux !x !y = (magnitude x y, orientation x y)
+          {-# INLINE magDirAux #-}
+
+          orientation :: Float -> Float -> Int
+          orientation !x !y 
+            -- En caso no llegemos al valor mínimo del threshold
+            | x >= negate threshLow, x < threshLow
+            , y >= negate threshLow, y < threshLow =  orientUndef -- Lo ponemos negro
+            | otherwise = 
+                let theta = atan2 x y
+                    alpha  = (theta - (pi/8)) * (4/pi)
+                    -- Normalizamos el ángulo entre [0..8)
+                    norm = if alpha < 0 then alpha + 8 else alpha
+                    -- Según repa-examples, esto debe ir más lento que sacar el valor normal
+                    -- usando un test explicito
+                    or  =  (64 * (1 + floor norm `mod` 4)) `min` 255
+                in or
+          {-# INLINE orientation #-}
+
+-- nonMaximumSuppression 
+--     :: Monad m 
+--     => Float -- ^ ThreshLow
+--     -> Float -- ^ ThreshHigh
+--     -> Channel (Float,Int) -- ^ Array donde cada pixel 
+--                            -- ^ es la dirección y la orientación
+--     -> m (Channel Float)
+-- nonMaximumSuppression low high mgdirArr = 
+--     R.computeP 
+--     $ makeBordered2 (R.extent mgdirArr) Int (Array r1 DIM2 a) (Array r2 DIM2 a) 
+
+
+
+
+{--         
+  _____                _   
+ |_   _|   ___   ___  | |_ 
+   | |    / _ \ / __| | __|
+   | |   |  __/ \__ \ | |_ 
+   |_|    \___| |___/  \__|
+                           
+--}
+
+test :: IO ()
+test = do
+    putStrLn "Iniciando Test Fichero Repa.hs"
+    -- img <- readImageIntoRepa "data/images/saitama.png"
+    img <- readImageIntoRepa "data/images/lena_color.png"
+    {-FIltro Gaussiano-}
+    -- blurImg <- mapM (promote >=> blur 4 >=> demote) img
+    -- savePngImage "blursaitama.png" (ImageRGB8 $ repaToJuicy blurImg)
+
+    {-Black and White-}
+    imgGrey <- toGrayScale img
+    -- savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
+
+    {-Filtro Sobel-}
+    output <- sobel imgGrey
+    savePngImage "sobelrepa.png" (ImageYF $ exportBW output)
+
+    {-Filtro Laplace-} -- TODO: Revisar porque no funciona
+    -- let [r,g,b] = img -- Auxiliar
+    -- mask <- R.computeP $ R.map arrBoundMaskFunc (U.zip3 r g b) :: IO (Channel Float)
+    -- maskValue <- R.computeP $ R.map arrBoundValueFunc (U.zip3 r g b) :: IO (Channel Float)
+    -- lple <- laplace 2 mask maskValue maskValue
+    -- savePngImage "laplace.png" (ImageYF $ exportBW lple)
+
+    
+
+    {-Histograma (Sequence)-}
+    -- hstSequence <- generateHistograms <$> mapM promoteInt img
+    -- print hstSequence
+
+    {-Histograma (Vector)-}
+    -- hstVector <- generateHists <$> mapM promoteInt img
+    -- print hstVector
+
+    
+
+
+
+    putStrLn "El test ha ido correctamente"
