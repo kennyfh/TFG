@@ -97,6 +97,22 @@ blur = stencil (convolve5x1 gaussian) clamp . stencil (convolve1x5 gaussian) cla
 
 -- TODO: modificar blur para realizar varias iteraciones
 
+ {-
+   __  __                        
+ |  \/  |   ___    __ _   _ __  
+ | |\/| |  / _ \  / _` | | '_ \ 
+ | |  | | |  __/ | (_| | | | | |
+ |_|  |_|  \___|  \__,_| |_| |_|
+                                 
+ -}
+
+meanF :: Acc (Matrix Float) -> Acc (Matrix Float)
+meanF img = stencil meanK clamp img
+  where meanK ::  Stencil3x3 Float -> Exp Float
+        meanK ((a,b,c)
+                 ,(d,e,f)
+                 ,(g,h,i)) = a/9+b/9+c/9+d/9+e/9+f/9+g/9+h/9+i/9
+
 
 {-
   ____            _              _ 

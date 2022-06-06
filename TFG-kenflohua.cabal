@@ -6,12 +6,12 @@ cabal-version: 1.12
 
 name:           TFG-kenflohua
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/TFG-kenflohua#readme>
-homepage:       https://github.com/githubuser/TFG-kenflohua#readme
-bug-reports:    https://github.com/githubuser/TFG-kenflohua/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2022 Author name here
+description:    Please see the README on GitHub at <https://github.com/kennyfh/TFG-kenflohua/blob/main/README.md>
+homepage:       https://github.com/kennyfh/TFG-kenflohua#readme
+bug-reports:    https://github.com/kennyfh/TFG-kenflohua/issues
+author:         Kenny Flores
+maintainer:     kenflohua@alum.us.es
+copyright:      2022 Kenny Flores
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/TFG-kenflohua
+  location: https://github.com/kennyfh/TFG-kenflohua
 
 library
   exposed-modules:
@@ -29,8 +29,8 @@ library
       Juicy
       JuicyAccelerate
       JuicyRepa
-      Kmeans
-      Pruebas
+      KmeansHist
+      KmeansSeg
       Repa
       VideoSummarization
   other-modules:
@@ -46,12 +46,8 @@ library
     , base >=4.7 && <5
     , containers
     , ffmpeg-light
-    , gtk
-    , gtk2hs-buildtools
     , parallel
-    , random
     , repa
-    , timeit
     , vector
   default-language: Haskell2010
 
@@ -72,12 +68,8 @@ executable TFG-kenflohua-exe
     , base >=4.7 && <5
     , containers
     , ffmpeg-light
-    , gtk
-    , gtk2hs-buildtools
     , parallel
-    , random
     , repa
-    , timeit
     , vector
   default-language: Haskell2010
 
@@ -99,11 +91,7 @@ test-suite TFG-kenflohua-test
     , base >=4.7 && <5
     , containers
     , ffmpeg-light
-    , gtk
-    , gtk2hs-buildtools
     , parallel
-    , random
     , repa
-    , timeit
     , vector
   default-language: Haskell2010
