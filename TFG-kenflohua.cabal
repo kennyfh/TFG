@@ -26,11 +26,11 @@ source-repository head
 library
   exposed-modules:
       Accelerate
+      Benchmark
       Juicy
       JuicyAccelerate
       JuicyRepa
-      KmeansHist
-      KmeansSeg
+      Kmeans
       Repa
       VideoSummarization
   other-modules:
@@ -45,7 +45,11 @@ library
     , accelerate-llvm-ptx
     , base >=4.7 && <5
     , containers
+    , criterion
+    , deepseq
     , ffmpeg-light
+    , gtk
+    , gtk2hs-buildtools
     , parallel
     , repa
     , vector
@@ -57,7 +61,7 @@ executable TFG-kenflohua-exe
       Paths_TFG_kenflohua
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -eventlog --make
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -eventlog
   build-depends:
       JuicyPixels
     , TFG-kenflohua
@@ -67,7 +71,11 @@ executable TFG-kenflohua-exe
     , accelerate-llvm-ptx
     , base >=4.7 && <5
     , containers
+    , criterion
+    , deepseq
     , ffmpeg-light
+    , gtk
+    , gtk2hs-buildtools
     , parallel
     , repa
     , vector
@@ -90,7 +98,11 @@ test-suite TFG-kenflohua-test
     , accelerate-llvm-ptx
     , base >=4.7 && <5
     , containers
+    , criterion
+    , deepseq
     , ffmpeg-light
+    , gtk
+    , gtk2hs-buildtools
     , parallel
     , repa
     , vector

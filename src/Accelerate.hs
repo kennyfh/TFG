@@ -146,8 +146,8 @@ gradY img = stencil gradient clamp img
                  ,(_,_,_)
                  ,(b1,b2,b3)) = -t1-(2*t2)-t3+b1+(2*b2)+b3
 
-magnitude :: Acc (Matrix Float) -> Acc (Matrix Float)
-magnitude img = A.zipWith (\x y  -> A.sqrt (x*x+y*y)) (gradX img) (gradY img)
+sobel :: Acc (Matrix Float) -> Acc (Matrix Float)
+sobel img = A.zipWith (\x y  -> A.sqrt (x*x+y*y)) (gradX img) (gradY img)
 
 
 test :: IO ()
@@ -155,7 +155,7 @@ test  =  do
     putStrLn "Iniciando Test Fichero Accelerate.hs"
     {--Leyendo imágenes --}
     -- img <- readImageAcc "images/saitama.png"
-    img <- readImageAcc "data/images/lena_color.png"
+    -- img <- readImageAcc "data/images/lena_color.png"
 
     {--Creación Histograma--}
     -- let (r,g,b) = gHistogram (use img)
@@ -163,15 +163,15 @@ test  =  do
     -- print (run r, run g , run b)
 
     {--Blanco y Negro--}
-    let gr = run $ grayScale (use img)
-    savePngImage "saitamagrayscale.png" (ImageYF $ greyToJcy gr)
+    -- let gr = run $ grayScale (use img)
+    -- savePngImage "saitamagrayscale.png" (ImageYF $ greyToJcy gr)
 
     {--Filtros--}
 
     -- let blr = run $ blur $ blur $ blur (use gr)
     -- savePngImage "axaa.png" (ImageYF $ greyToJcy blr)
 
-    let sobel = run $ magnitude (use gr)
-    savePngImage "sobelAcc.png" (ImageYF $ greyToJcy sobel)
+    -- let sobel = run $ magnitude (use gr)
+    -- savePngImage "sobelAcc.png" (ImageYF $ greyToJcy sobel)
 
     putStrLn "Fin del Test fichero Acelerate.hs"

@@ -1,18 +1,20 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators       #-}
 
 -- module KmeansSeg (Point, Cluster, Id, kmeans) where
-module KmeansSeg () where
+module Kmeans () where
 
 import Prelude as P
 import Data.Array.Accelerate as A
+import Data.Array.Accelerate.LLVM.PTX
 
+-- https://media.githubusercontent.com/media/tmcdonell/tmcdonell.github.io/master/papers/TrevorMcDonell_PhD_Thesis.pdf
+-- para poder arreglar el pointsum
 
--- {-
--- La implementación la vamos a realizar para puntos de 3 dimensiones
+{-
+La implementación la vamos a realizar para puntos de 3 dimensiones
 
--- -}
+-}
 
 -- -- Tipo de dato punto
 -- type Point a = (a,a,a)
@@ -130,11 +132,14 @@ import Data.Array.Accelerate as A
 --         -- posición acumulativa (x,y,z)y el número de puntos asignados
 --         -- a cada centroide
 --         makePointSum :: Acc (Vector (PointSum a))
---         makePointSum = A.permute addPointSum zeros near input
+--         -- makePointSum :: Acc (Vector Id) -> Acc (Vector (PointSum a))
+--         makePointSum nearest = A.permute addPointSum zeros near input
 --             where
 --                     zeros   = A.fill (constant (Z:.nclusters)) (constant (0,(0,0,0)))
 --                     input   = A.zip (A.fill (A.shape points) (constant 1)) points
 --                     near ix = index1 (A.fromIntegral (nearest ! ix))
+        
+    
 
 --         addPointSum :: Exp (PointSum a) -> Exp (PointSum a) -> Exp (PointSum a)
 --         addPointSum x y = 

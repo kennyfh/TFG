@@ -1,7 +1,9 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE BangPatterns  #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE PackageImports, BangPatterns, QuasiQuotes, PatternGuards,
+             MagicHash, ScopedTypeVariables, TypeFamilies #-}
+{-# OPTIONS -fno-warn-missing-signatures -fno-warn-incomplete-patterns -fno-warn-orphans #-}
+
 module Repa where
 
 import Data.Array.Repa as R
@@ -22,7 +24,13 @@ import Data.Array.Repa.Specialised.Dim2
 import Data.Array.Repa.Repr.Cursored (makeCursored)
 import qualified Data.Vector.Unboxed.Mutable as VM
 -- import System.Random
+import Control.DeepSeq
 
+-- Instancias para poder realizar Benchmarks
+instance Unbox e => NFData (Channel e) where
+  rnf = (`deepSeqArray` ())
+instance Unbox e => NFData (Array U DIM1 e) where
+  rnf = (`deepSeqArray` ())
 
 
 promote :: Monad m => Channel Pixel8 -> m (Channel Float)
@@ -62,15 +70,15 @@ type Histogram = Seq Int
 type Histograms = [Histogram]
 
 -- 1º Versión (Cálculo de Histogramas secuencialmente)
--- generateHistograms :: ImgRGB -> Histograms
--- generateHistograms = Prelude.map generateHistogram
+generateHistogramsV1 :: ImgRGB Int-> Histograms
+generateHistogramsV1 = Prelude.map generateHistogram
 
 -- 2º version (Cálculo de Histogramas de manera paralela)
 -- Nivel grano grueso: haz el cálculo del histograma de cada canal en paralelo. 
 -- Esto solo llevaría a hacerlo tan solo 3 veces más rápido.
 
-generateHistograms :: ImgRGB Int-> Histograms
-generateHistograms xs =
+generateHistogramsV2 :: ImgRGB Int-> Histograms
+generateHistogramsV2 xs =
     let bs = Prelude.map generateHistogram xs
         cs = bs `using` parList rdeepseq
         in cs
@@ -99,8 +107,8 @@ Después en tu experimentos juega con esa N, a ver cuando va más rápido.
 type HVector = Vector Int
 type HVectors = [HVector]
 
-generateHists :: ImgRGB Int-> [HVector]
-generateHists xs =
+generateHistogramsV3 :: ImgRGB Int-> [HVector]
+generateHistogramsV3 xs =
     let bs = Prelude.map generateHist xs
         cs = bs `using` parList rdeepseq
         in cs
@@ -117,7 +125,7 @@ generateRows band =
 
 
 generateRow :: Channel Int -> Int -> Vector Int
-generateRow band i=
+generateRow band i =
     let zero = V.replicate 256 0 -- O(n)
         fila =  R.toList $ R.slice band  (Any :. (i::Int) :. All) -- Seleccionamos la Fila [12,3,4,4,5]
         l = L.zip fila [1,1..]
@@ -146,18 +154,20 @@ FORMULA PARA SACAR LA LUMINOSIDAD
 -}
 
 -- 1º Version usando zipwith
--- toGrayScale :: ImgRGB Int -> IO (Channel Float)
--- toGrayScale img = R.computeP $ R.zipWith (+) b (R.zipWith (+) r g)
---     where r = generateComponentB 0 (L.head img)
---           g = generateComponentB 1 (img !! 1)
---           b = generateComponentB 2 (L.last img)
+toGrayScaleV1 
+    :: ImgRGB Pixel8 -- ^ Dada una imagen RGB
+    -> IO (Channel Float) -- ^ Devolvemos una imagen 
+toGrayScaleV1 img = R.computeP $ R.zipWith (+) b (R.zipWith (+) r g)
+    where r = generateComponentB 0 (L.head img)
+          g = generateComponentB 1 (img !! 1)
+          b = generateComponentB 2 (L.last img)
 
--- generateComponentB :: Int -> Channel Int -> Array D DIM2 Float
--- generateComponentB ind = R.map (\v -> (fromIntegral (fromIntegral v ::Int) / 255)*val)
---     where val = [0.2989,0.5870,0.1140] !! ind
+generateComponentB :: Int -> Channel Pixel8 -> Array D DIM2 Float
+generateComponentB ind = R.map (\v -> (fromIntegral (fromIntegral v) / 255)*val)
+    where val = [0.2989,0.5870,0.1140] !! ind
 
 -- 2º Version usando zip3
-luminance :: (Pixel8, Pixel8, Pixel8) -> Float
+luminance :: (Pixel8, Pixel8, Pixel8) -> Float -- ^ Cada terna RGB lo transforma en su luminosidad
 {-# INLINE luminance #-}
 luminance (r, g, b)
  = let  r'      = fromIntegral (fromIntegral r) / 255
@@ -166,13 +176,12 @@ luminance (r, g, b)
    in   r' * 0.3 + g' * 0.59 + b' * 0.11
 
 -- toGrayScale :: ImgRGB Pixel8 -> IO (Channel Float)
-toGrayScale
-    :: Monad m
-    => ImgRGB Pixel8 -- ^ Dada una imagen RGB 
-    -> m (Channel Float) -- ^ Devolvemos la luminosidad de nuestra imagen
-toGrayScale [r,g,b] = R.computeP . R.map luminance  $ U.zip3 r g b -- A
-toGrayScale _ = error "No se puede hacer debido a que no hay los canales suficientes para realizar el blanco y negro"
-{-# NOINLINE toGrayScale #-}
+toGrayScaleV2
+    :: ImgRGB Pixel8 -- ^ Dada una imagen RGB 
+    -> IO (Channel Float) -- ^ Devolvemos la luminosidad de nuestra imagen
+toGrayScaleV2 [r,g,b] = R.computeP . R.map luminance  $ U.zip3 r g b -- A
+toGrayScaleV2 _ = error "No se puede hacer debido a que no hay los canales suficientes para realizar el blanco y negro"
+{-# NOINLINE toGrayScaleV2 #-}
 
 
 {-- 
@@ -193,7 +202,7 @@ toGrayScale _ = error "No se puede hacer debido a que no hay los canales suficie
     --[1/16, 4/16,....]
 -- 
 
-blurX :: Monad m => Channel Float -> m (Channel Float)
+blurX :: Channel Float -> IO (Channel Float)
 blurX img = R.computeP -- Computamos todo de forma paralela (CPU)
             $ R.smap (/ 16) -- un map más eficiente
             $ forStencil2  BoundClamp img
@@ -201,7 +210,7 @@ blurX img = R.computeP -- Computamos todo de forma paralela (CPU)
 {-# NOINLINE blurX #-}
 
 
-blurY :: Monad m => Channel Float -> m (Channel Float)
+blurY :: Channel Float -> IO (Channel Float)
 blurY img =  R.computeP -- Computamos todo de forma paralela 
              $ R.smap (/16) -- Dividimos cada pixel de la imagen entre 16
              $ forStencil2 BoundClamp img
@@ -212,15 +221,37 @@ blurY img =  R.computeP -- Computamos todo de forma paralela
                              1 |] -- Usamos un stencil para hacer las convoluciones
 {-# NOINLINE blurY #-}
 
-
-blur :: Monad m => Int -> Channel Float -> m (Channel Float)
-blur = go -- Es equivalente a esto : blur steps imgInit = go steps imgInit
+-- Uso de 2 kernels
+blurV1 :: Int -> Channel Float -> IO (Channel Float)
+blurV1 = go -- Es equivalente a esto : blur steps imgInit = go steps imgInit
     where go 0 !img = return img -- Si ya no podemos hacer más iteraciones, devolvemos la imagen
           go n !img = -- En caso contrario
               do sepx <- blurX img -- Realizamos el difuminado usando el kernel por el eje x 
                  sepy <- blurY sepx -- Realizamos el difuminado usando como kernel del eje y
                  go (n-1) sepy -- Y repetimos todo el proceso 
-{-# NOINLINE blur #-}
+{-# NOINLINE blurV1 #-}
+
+-- Kernel 5x5
+-- https://www.opencv-srf.com/2018/03/gaussian-blur.html
+blurV2 :: Int -> Channel Float -> IO (Channel Float)
+blurV2 = go
+    where go 0 !img = return img
+          go n !img = do 
+                        blurStep <- R.computeP 
+                                    $ R.smap (/273)
+                                    $ forStencil2 BoundClamp img
+                                      [stencil2| 1 4  7  4  1 
+                                                 4 16 26 16 4
+                                                 7 26 41 26 7
+                                                 4 16 26 16 4
+                                                 1 4  7  4  1 |]
+                             
+                        go (n-1) blurStep
+{-# NOINLINE blurV2 #-}
+
+
+
+
 
 
  {-
@@ -230,14 +261,13 @@ blur = go -- Es equivalente a esto : blur steps imgInit = go steps imgInit
  | |  | | |  __/ | (_| | | | | |
  |_|  |_|  \___|  \__,_| |_| |_|
                                  
- -}
+ -} 
 
 -- https://homepages.inf.ed.ac.uk/rbf/HIPR2/mean.htm
 
 meanF 
-    :: Monad m
-    => Channel Float
-    -> m (Channel Float)
+    ::  Channel Float --  ^ Imagen de Entrada
+    -> IO (Channel Float) -- ^ Imagen de Salida
 meanF img = R.computeP
         $ R.smap (/9)
         $ forStencil2 BoundClamp img
@@ -259,7 +289,7 @@ meanF img = R.computeP
 -- https://es.wikipedia.org/wiki/Operador_Sobel#Formulaci%C3%B3n
 
 -- Cálculo de Gx
-gradX :: Monad m => Channel Float -> m (Channel Float)
+gradX :: Channel Float -> IO (Channel Float)
 gradX img = R.computeP -- Computamos todo de forma paralela 
             $ forStencil2 BoundClamp img
               [stencil2| -1 0 1
@@ -268,7 +298,7 @@ gradX img = R.computeP -- Computamos todo de forma paralela
 {-# NOINLINE gradX #-}
 
 -- Calculo de Gy
-gradY :: Monad m => Channel Float -> m (Channel Float)
+gradY  :: Channel Float -> IO (Channel Float)
 gradY img = R.computeP -- Computamos todo de forma paralela
             $ forStencil2 BoundClamp img
               [stencil2| -1 -2 -1
@@ -285,9 +315,8 @@ magnitude x y = sqrt (x*x + y*y)
 -- Para usar este algoritmo, en primer lugar debemos sacar la luminosidad
 -- de la imagen RGB (pasarlo a blanco y negro)
 sobel
-    :: Monad m
-    => Channel Float -- ^ Imagen de entrada
-    -> m (Channel Float) -- ^ Imagen de salida tras haberle aplicado el filtro
+    :: Channel Float -- ^ Imagen de entrada
+    -> IO (Channel Float) -- ^ Imagen de salida tras haberle aplicado el filtro
 sobel img = do
     gx <- gradX img -- Calculamos el gradiente de X de la imagen
     gy <- gradY img -- Calculamos el gradiente de Y de la imagen
@@ -363,9 +392,9 @@ canny
     -> ImgRGB Pixel8 -- ^ Imagen que le queremos pasar
     -> IO (Channel Pixel8)
 canny steps threshLow threshHigh imgInit =
-    do imgGrey <- toGrayScale imgInit -- Pasamos la imagen a blanco y negro
+    do imgGrey <- toGrayScaleV2 imgInit -- Pasamos la imagen a blanco y negro
        savePngImage "paso1canny.png" (ImageYF $ exportBW imgGrey) -- Paso CORRECTO
-       blurImg <- blur steps imgGrey -- Suavizamos la imagen usando filtro gaussiano
+       blurImg <- blurV1 steps imgGrey -- Suavizamos la imagen usando filtro gaussiano
        savePngImage "paso2canny.png" (ImageYF $ exportBW blurImg) -- Paso CORRECTO
        imgGx <- gradX blurImg -- Gradiente X 
        imgGy <- gradY blurImg -- Gradiente Y 
@@ -572,7 +601,7 @@ test = do
     -- savePngImage "blursaitama.png" (ImageRGB8 $ repaToJuicy blurImg)
 
     {-Black and White-}
-    imgGrey <- toGrayScale img
+    imgGrey <- toGrayScaleV2 img
     -- savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
 
     {-Filtro Sobel-}
@@ -587,9 +616,8 @@ test = do
     -- savePngImage "laplace.png" (ImageYF $ exportBW lple)
 
     {--CANNY --}
-    cannyImg <- canny 1 50 170 img
-    savePngImage "canny.png" (ImageY8 $ exportBand cannyImg)
-
+    -- cannyImg <- canny 1 50 170 img
+    -- savePngImage "canny.png"
     {-Histograma (Sequence)-}
     -- hstSequence <- generateHistograms <$> mapM promoteInt img
     -- print hstSequence

@@ -43,8 +43,11 @@ dependencies:
 # Nos permite transformar datos de Accelerate a Repa y viceversa
 - accelerate-io-repa
 # COMENTAR CUANDO ESTEMOS HACIENDO PRUEBAS EN CENTOS
-#- gtk2hs-buildtools
-#- gtk
+- gtk2hs-buildtools
+- gtk
+# Librería que nos permite crear benchmarks
+- criterion
+- deepseq
 
 
 library:
@@ -59,7 +62,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     - -eventlog
-    - --make
+    # - --make
     dependencies:
     - TFG-kenflohua
 
