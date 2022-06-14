@@ -33,6 +33,9 @@ promoteFloat = A.map A.fromIntegral
 demoteFloat :: Acc (Matrix Float) -> Acc (Matrix Pixel8)
 demoteFloat =  A.map A.truncate
 
+promoteImageF :: Acc (Matrix RGB) -> Acc (Matrix (Float,Float,Float))
+promoteImageF img = A.zip3 (A.compute $ promoteFloat r) (A.compute $ promoteFloat g) (A.compute $ promoteFloat b)
+    where (r,g,b) = A.unzip3 img
 
 {--
   _   _   _         _                                              
@@ -104,11 +107,17 @@ convolve1x5 kernel ((_,a,_), (_,b,_), (_,c,_), (_,d,_), (_,e,_))
 
 -- Para realizar el blur, una forma en vez de hacer un kernel 5x5 a cada elemento, podemos realizar 
 -- 2 pasadas por cada eje usando 
-blur :: (P.Num a, Elt a, P.Fractional a, P.Num (Exp a)) => Acc (Matrix a) -> Acc (Matrix a)
+-- blur :: (P.Num a, Elt a, P.Fractional a, P.Num (Exp a)) => Acc (Matrix a) -> Acc (Matrix a)
+blur :: Acc (Matrix Float) -> Acc (Matrix Float)
 blur = stencil (convolve5x1 gaussian) clamp . stencil (convolve1x5 gaussian) clamp
     where gaussian = P.map A.constant [0.06136,0.24477,0.38774,0.24477,0.06136]
 
 -- TODO: modificar blur para realizar varias iteraciones
+blurRGB :: Acc (Matrix RGB) -> Acc (Matrix (Float,Float,Float))
+blurRGB img = A.zip3 (A.compute $ blur $ promoteFloat r) (A.compute $ blur $ promoteFloat g) (A.compute $ blur $ promoteFloat b)
+    where (r,g,b) = A.unzip3 img
+
+
 
  {-
    __  __                        
@@ -119,8 +128,12 @@ blur = stencil (convolve5x1 gaussian) clamp . stencil (convolve1x5 gaussian) cla
                                  
  -}
 
-meanF :: Acc (Matrix Float) -> Acc (Matrix Float)
-meanF img = stencil meanK clamp img
+meanRGBFilter :: Acc (Matrix (Float,Float,Float)) -> Acc (Matrix (Float,Float,Float))
+meanRGBFilter img= A.zip3 (A.compute $ meanChannel r) (A.compute $ meanChannel g) (A.compute $ meanChannel b)
+  where (r,g,b) = A.unzip3 img
+
+meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
+meanChannel img = stencil meanK clamp img
   where meanK ::  Stencil3x3 Float -> Exp Float
         meanK ((a,b,c)
                  ,(d,e,f)
@@ -163,6 +176,51 @@ sobel :: Acc (Matrix Float) -> Acc (Matrix Float)
 sobel img = A.zipWith (\x y  -> A.sqrt (x*x+y*y)) (gradX img) (gradY img)
 
 
+{-
+  _                       _                       
+ | |       __ _   _ __   | |   __ _    ___    ___ 
+ | |      / _` | | '_ \  | |  / _` |  / __|  / _ \
+ | |___  | (_| | | |_) | | | | (_| | | (__  |  __/
+ |_____|  \__,_| | .__/  |_|  \__,_|  \___|  \___|
+                 |_|                              
+
+-}
+
+-- https://homepages.inf.ed.ac.uk/rbf/HIPR2/log.htm
+
+laplace ::  Acc (Matrix Float) -> Acc (Matrix Float)
+laplace img = stencil stencilLaplace clamp img
+  where stencilLaplace ::  Stencil3x3 Float -> Exp Float
+        stencilLaplace ((a,b,c)
+                       ,(d,e,f)
+                       ,(g,h,i)) = -b-d+(4*e)-f-h
+
+{--
+   ____                               _                     ____                                _     _       _                 
+  / ___|   __ _   _   _   ___   ___  (_)   __ _   _ __     / ___|   _ __ ___     ___     ___   | |_  | |__   (_)  _ __     __ _ 
+ | |  _   / _` | | | | | / __| / __| | |  / _` | | '_ \    \___ \  | '_ ` _ \   / _ \   / _ \  | __| | '_ \  | | | '_ \   / _` |
+ | |_| | | (_| | | |_| | \__ \ \__ \ | | | (_| | | | | |    ___) | | | | | | | | (_) | | (_) | | |_  | | | | | | | | | | | (_| |
+  \____|  \__,_|  \__,_| |___/ |___/ |_|  \__,_| |_| |_|   |____/  |_| |_| |_|  \___/   \___/   \__| |_| |_| |_| |_| |_|  \__, |
+                                                                                                                          |___/ 
+
+--}
+-- https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
+--SIGMA =1
+gaussianSmoothing :: Acc (Matrix Float) -> Acc (Matrix Float)
+gaussianSmoothing img = A.map (/273) $ stencil gaussian clamp img
+  where gaussian :: Stencil5x5 Float -> Exp Float
+        gaussian ((a1,a2,a3,a4,a5)
+                 ,(b1,b2,b3,b4,b5)
+                 ,(c1,c2,c3,c4,c5)
+                 ,(d1,d2,d3,d4,d5),
+                 (e1,e2,e3,e4,e5)) = a1+(4*a2)+(7*a3)+(4*a4)+a5
+                                     + (4*b1)+(16*b2)+(26*b3)+(16*b4)+(4*b5)
+                                     + (7*c1)+(26*c2)+(41*c3)+(26*c4)+(7*c5)
+                                     + (4*d1)+(16*d2)+(26*d3)+(16*d4)+(4*d5)
+                                     + e1+(4*e2)+(7*e3)+(4*e4)+e5
+
+
+
 test :: IO ()
 test  =  do
     putStrLn "Iniciando Test Fichero Accelerate.hs"
@@ -186,5 +244,12 @@ test  =  do
 
     -- let sobel = run $ magnitude (use gr)
     -- savePngImage "sobelAcc.png" (ImageYF $ greyToJcy sobel)
+
+    -- let imagelaplace =  run $ laplace (use gr)
+    -- savePngImage "laplaceAcc.png" (ImageYF $ greyToJcy imagelaplace)
+
+    let gausssmouth =  run $ gaussianSmoothing (use gr)
+    savePngImage "xxxxxxxx.png" (ImageYF $ greyToJcy gausssmouth)
+
 
     putStrLn "Fin del Test fichero Acelerate.hs"

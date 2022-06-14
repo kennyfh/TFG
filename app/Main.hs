@@ -10,7 +10,6 @@ import Benchmark as B
 main :: IO ()
 main =  do
     -- Rx.test
-    -- Rx.test
-    -- Ax.test
-    B.test
+    Ax.test
+    -- B.test
     putStrLn  "Fin del Main"

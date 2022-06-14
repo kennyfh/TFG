@@ -250,10 +250,6 @@ blurV2 = go
 {-# NOINLINE blurV2 #-}
 
 
-
-
-
-
  {-
    __  __                        
  |  \/  |   ___    __ _   _ __  
@@ -333,17 +329,72 @@ sobel img = do
 
 -}
 
--- https://iq.opengenus.org/laplacian-filter/
+-- https://homepages.inf.ed.ac.uk/rbf/HIPR2/log.htm
 laplace
-    :: Monad m
-    => Channel Float
-    -> m (Channel Float)
+    :: Channel Float
+    -> IO (Channel Float)
 laplace img = 
     R.computeP 
     $ forStencil2 BoundClamp img
         [stencil2|  0 -1  0 
                    -1  4 -1
                     0 -1  0 |]
+
+
+{--
+   ____                               _                     ____                                _     _       _                 
+  / ___|   __ _   _   _   ___   ___  (_)   __ _   _ __     / ___|   _ __ ___     ___     ___   | |_  | |__   (_)  _ __     __ _ 
+ | |  _   / _` | | | | | / __| / __| | |  / _` | | '_ \    \___ \  | '_ ` _ \   / _ \   / _ \  | __| | '_ \  | | | '_ \   / _` |
+ | |_| | | (_| | | |_| | \__ \ \__ \ | | | (_| | | | | |    ___) | | | | | | | | (_) | | (_) | | |_  | | | | | | | | | | | (_| |
+  \____|  \__,_|  \__,_| |___/ |___/ |_|  \__,_| |_| |_|   |____/  |_| |_| |_|  \___/   \___/   \__| |_| |_| |_| |_| |_|  \__, |
+                                                                                                                          |___/ 
+
+--}
+-- https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
+--SIGMA =1
+
+gaussianSmoothing :: Channel Float -> IO (Channel Float)
+gaussianSmoothing img = R.computeP
+                        $ R.smap (/273)
+                        $ forStencil2 BoundClamp img
+                          [stencil2| 1  4  7  4  1
+                                     4  16 26 16 4
+                                     7  26 41 26 7
+                                     4  16 26 16 4
+                                     1  4  7  4  1|]
+
+
+{--
+  _                       _                  _                              __      ____                               _                 
+ | |       __ _   _ __   | |   __ _    ___  (_)   __ _   _ __       ___    / _|    / ___|   __ _   _   _   ___   ___  (_)   __ _   _ __  
+ | |      / _` | | '_ \  | |  / _` |  / __| | |  / _` | | '_ \     / _ \  | |_    | |  _   / _` | | | | | / __| / __| | |  / _` | | '_ \ 
+ | |___  | (_| | | |_) | | | | (_| | | (__  | | | (_| | | | | |   | (_) | |  _|   | |_| | | (_| | | |_| | \__ \ \__ \ | | | (_| | | | | |
+ |_____|  \__,_| | .__/  |_|  \__,_|  \___| |_|  \__,_| |_| |_|    \___/  |_|      \____|  \__,_|  \__,_| |___/ |___/ |_|  \__,_| |_| |_|
+                 |_|                                                                                                                     
+
+--}
+
+-- Aproximación discreta de la función LoG con sigma =1.4
+-- https://homepages.inf.ed.ac.uk/rbf/HIPR2/log.htm
+
+
+-- ERROR: Los stencils en Repa solamente soportan hasta kernels de 7x7
+-- laplacianOfGaussian
+--     :: Channel Float
+--     -> IO (Channel Float)
+-- laplacianOfGaussian img = R.computeP
+--                           $ forStencil2 BoundClamp img
+--                             [stencil2| 0   1  1  2   2   2  1  1  0
+--                                        1   2  4  5   5   5  4  2  1
+--                                        1   4  5  3   0   3  5  4  1
+--                                        2   5  3 -12 -24 -12 3  5  2 
+--                                        2   5  0 -24 -40 -24 0  5  2
+--                                        2   5  3 -12 -24 -12 3  5  2
+--                                        1   4  5  3   0   3  5  4  1
+--                                        1   2  4  5   5   5  4  2  1
+--                                        0   1  1  2   2   2  1  1  0|]
+
+
 
 {-
    ____                                   
@@ -366,220 +417,220 @@ laplace img =
 
 -- Classification of the output pixel
 
-data Orient = Undef | PosDiag | Vert | NegDiag | Horiz
+-- data Orient = Undef | PosDiag | Vert | NegDiag | Horiz
 
-orient :: Orient -> Float
-orient Undef    = 0
-orient PosDiag     = 64
-orient Vert     = 128
-orient NegDiag     = 192
-orient Horiz    = 255
-
-
-
-data Edge       = None | Weak | Strong
-
-edge :: Edge -> Float
-edge None       = 0     :: Float
-edge Weak       = 128   :: Float
-edge Strong     = 255   :: Float
+-- orient :: Orient -> Float
+-- orient Undef    = 0
+-- orient PosDiag     = 64
+-- orient Vert     = 128
+-- orient NegDiag     = 192
+-- orient Horiz    = 255
 
 
-canny
-    :: Int -- ^ Número de pasos a dar
-    -> Float -- ^ threshLow
-    -> Float -- ^ threshHigh
-    -> ImgRGB Pixel8 -- ^ Imagen que le queremos pasar
-    -> IO (Channel Pixel8)
-canny steps threshLow threshHigh imgInit =
-    do imgGrey <- toGrayScaleV2 imgInit -- Pasamos la imagen a blanco y negro
-       savePngImage "paso1canny.png" (ImageYF $ exportBW imgGrey) -- Paso CORRECTO
-       blurImg <- blurV1 steps imgGrey -- Suavizamos la imagen usando filtro gaussiano
-       savePngImage "paso2canny.png" (ImageYF $ exportBW blurImg) -- Paso CORRECTO
-       imgGx <- gradX blurImg -- Gradiente X 
-       imgGy <- gradY blurImg -- Gradiente Y 
-       arrMagDir <- magDir threshLow imgGx imgGy
-       let (mag,dir) = U.unzip arrMagDir
-       savePngImage "paso3cannymag.png" (ImageYF $ exportBW mag) -- Paso
 
-       print dir
-       arrSup <- nonMaximumSuppression threshLow threshHigh arrMagDir
-       vecStrong <- selectBestEdges arrSup
-       wildfire arrSup vecStrong
+-- data Edge       = None | Weak | Strong
 
--- Función que nos permite obtener la magnitud y la orientación del
--- gradiente 
-magDir
-    :: Float -- ^ threshLow
-    -> Channel Float -- ^ Imagen gradiente X
-    -> Channel Float -- ^ Imagen gradiente Y
-    -> IO (Channel (Float,Int)) -- ^ Salida con la magnitud y dirección de la imagen
-magDir !threshLow gx gy = R.computeP $ R.zipWith magDirAux gx gy
-    where magDirAux :: Float -> Float -> (Float,Int)
-          magDirAux !x !y = (magnitude x y, orientation x y)
-          {-# INLINE magDirAux #-}
-
-          orientation :: Float -> Float -> Int
-          orientation !x !y
-            -- En caso no llegemos al valor mínimo del threshold
-            | x >= negate threshLow, x < threshLow
-            , y >= negate threshLow, y < threshLow = round $ orient Undef -- Lo ponemos negro
-            | otherwise =
-                let theta = atan2 x y
-                    alpha  = (theta - (pi/8)) * (4/pi)
-                    -- Normalizamos el ángulo entre [0..8)
-                    norm = if alpha < 0 then alpha + 8 else alpha
-                    -- Según repa-examples, esto debe ir más lento que sacar el valor normal
-                    -- usando un test explicito
-                    or  =  (64 * (1 + floor norm `mod` 4)) `min` 255
-                in or
-          {-# INLINE orientation #-}
+-- edge :: Edge -> Float
+-- edge None       = 0     :: Float
+-- edge Weak       = 128   :: Float
+-- edge Strong     = 255   :: Float
 
 
--- Esta función realiza uno de los pasos más importantes del algoritmo de
--- Detección de bordes Canny, nuestro objetivo es remover los bordes tanto reduntantes
--- como duplicados identificados por el algoritmo de detección Sobel. Por lo que al solo 
--- querer una línea que muestre el borde en vez de tener varias líneas para el mismo borde
--- y esto se consigue mediante el algoritmo de supresión No-max realizado a continuación.
-nonMaximumSuppression
-    :: Float -- ^ ThreshLow
-    -> Float -- ^ ThreshHigh
-    -> Channel (Float,Int) -- ^ Array donde cada pixel 
-                           -- ^ es la dirección y la orientación
-    -> IO (Channel Float) -- Imagen con los bordes limpios
-nonMaximumSuppression low high mgdirArr =
-    R.computeP
-    $ makeBordered2 (R.extent mgdirArr) -- Dimensión del array
-                    1
-                    (makeCursored (extent mgdirArr) id addDim compPts)
-                    (R.fromFunction (extent mgdirArr) (const 0))
+-- canny
+--     :: Int -- ^ Número de pasos a dar
+--     -> Float -- ^ threshLow
+--     -> Float -- ^ threshHigh
+--     -> ImgRGB Pixel8 -- ^ Imagen que le queremos pasar
+--     -> IO (Channel Pixel8)
+-- canny steps threshLow threshHigh imgInit =
+--     do imgGrey <- toGrayScaleV2 imgInit -- Pasamos la imagen a blanco y negro
+--        savePngImage "paso1canny.png" (ImageYF $ exportBW imgGrey) -- Paso CORRECTO
+--        blurImg <- blurV1 steps imgGrey -- Suavizamos la imagen usando filtro gaussiano
+--        savePngImage "paso2canny.png" (ImageYF $ exportBW blurImg) -- Paso CORRECTO
+--        imgGx <- gradX blurImg -- Gradiente X 
+--        imgGy <- gradY blurImg -- Gradiente Y 
+--        arrMagDir <- magDir threshLow imgGx imgGy
+--        let (mag,dir) = U.unzip arrMagDir
+--        savePngImage "paso3cannymag.png" (ImageYF $ exportBW mag) -- Paso
 
-    where {-# INLINE compPts #-}
-          compPts idx@(sh :. i :. j)
-            -- Si no sabemos la orientación, devolvemos 0
-            | o == orient Undef = edge None
-            -- Si la orientación es horizontal, devolvemos el máximo entre los vecinos horizontales
-            | o == orient Horiz = retMax (getMagnitude (sh :. i :. j-1)) (getMagnitude (sh :. i :. j+1))
-            -- Si la orientación es Vertical, devolvemos el máximo entre los vecinos verticales
-            | o == orient Vert = retMax (getMagnitude (sh :. i-1 :. j)) (getMagnitude (sh :. i+1 :. j))
-            -- Si la orientación es la diagonal negativa, entonces devolvemos el máximo de sus vecinos
-            | o == orient NegDiag = retMax (getMagnitude (sh :. i-1 :.j-1 )) (getMagnitude (sh :. i+1 :.j+1 ))
-            -- Si la orientación es la diagonal positiva, entonces devolvemos el máximo de sus vecinos
-            | o == orient PosDiag = retMax (getMagnitude (sh :. i-1 :.j+1 )) (getMagnitude (sh :. i+1 :.j-1 ))
-            | otherwise = edge None
+--        print dir
+--        arrSup <- nonMaximumSuppression threshLow threshHigh arrMagDir
+--        vecStrong <- selectBestEdges arrSup
+--        wildfire arrSup vecStrong
 
-            where
-                -- orientación del gradiente
-                !o = getOrient idx
-                -- Magnitud del gradiente
-                !m = getMagnitude (Z :. i :. j)
+-- -- Función que nos permite obtener la magnitud y la orientación del
+-- -- gradiente 
+-- magDir
+--     :: Float -- ^ threshLow
+--     -> Channel Float -- ^ Imagen gradiente X
+--     -> Channel Float -- ^ Imagen gradiente Y
+--     -> IO (Channel (Float,Int)) -- ^ Salida con la magnitud y dirección de la imagen
+-- magDir !threshLow gx gy = R.computeP $ R.zipWith magDirAux gx gy
+--     where magDirAux :: Float -> Float -> (Float,Int)
+--           magDirAux !x !y = (magnitude x y, orientation x y)
+--           {-# INLINE magDirAux #-}
 
-                getOrient = fst . R.unsafeIndex mgdirArr
-                getMagnitude  = snd . R.unsafeIndex mgdirArr
-
-                {-# INLINE retMax #-}
-                retMax !intensity1 !intensity2
-                    | m < round low     = edge None
-                    | m < intensity1    = edge None
-                    | m < intensity2    = edge None
-                    | m < round high    = edge Weak
-                    | otherwise         = edge Strong
-{-# NOINLINE nonMaximumSuppression #-}
-
-
--- Selecciona los índices de los bordes que queremos quedarnos
--- Esto estaría mucho mejor si se pudiera hacer junto al paso anterior,
--- pero como Repa no permite una primitiva mapFilter fusionada,
--- hay que realizar otra función.
-selectBestEdges
-    ::  Channel Float -- ^ Nuestra imagen después de haberle hecho nonMaxSuppresssion
-    -> IO (Array U DIM1 Int) -- ^ Vector que contiene los índices donde se encuentran los bordes
-selectBestEdges img =
-     let vec = U.toUnboxed img -- Convertimos nuestro array en un vector  O(1)
-
-         match ix = vec `VU.unsafeIndex` ix == edge Strong -- Función booleana que nos dice si
-         {-# INLINE match #-}                                                  -- el pixel tiene el valor 255 o no
-
-         process' ix = ix -- Devolvemos el índice donde se encuentra el pixel Strong (valor pix=255)
-         {-# INLINE process' #-}
-
-     in selectP match process' (size $ extent img) -- Esta función produce un vector a todos los elementos
-                                                   -- de nuestra imagen. Si el pixel cumple el predicado,
-                                                   -- vamos a guardar el índice donde se encuentre su posición.
-{-# NOINLINE selectBestEdges #-}
+--           orientation :: Float -> Float -> Int
+--           orientation !x !y
+--             -- En caso no llegemos al valor mínimo del threshold
+--             | x >= negate threshLow, x < threshLow
+--             , y >= negate threshLow, y < threshLow = round $ orient Undef -- Lo ponemos negro
+--             | otherwise =
+--                 let theta = atan2 x y
+--                     alpha  = (theta - (pi/8)) * (4/pi)
+--                     -- Normalizamos el ángulo entre [0..8)
+--                     norm = if alpha < 0 then alpha + 8 else alpha
+--                     -- Según repa-examples, esto debe ir más lento que sacar el valor normal
+--                     -- usando un test explicito
+--                     or  =  (64 * (1 + floor norm `mod` 4)) `min` 255
+--                 in or
+--           {-# INLINE orientation #-}
 
 
-wildfire
-    :: Channel Float -- ^ Imagen después de haber aplicado Non-max suppressión
-    -> Array U DIM1 Int -- ^ Vector que contiene los índices donde se encuentran los bordes fuertes
-    -> IO (Channel Pixel8) -- ^ Imagen habiendole aplicado todo el algoritmo Canny
-wildfire img arrStrong
- = do   (sh, vec)       <- wildfireIO
-        return  $ sh `seq` vec `seq` R.fromUnboxed sh vec
+-- -- Esta función realiza uno de los pasos más importantes del algoritmo de
+-- -- Detección de bordes Canny, nuestro objetivo es remover los bordes tanto reduntantes
+-- -- como duplicados identificados por el algoritmo de detección Sobel. Por lo que al solo 
+-- -- querer una línea que muestre el borde en vez de tener varias líneas para el mismo borde
+-- -- y esto se consigue mediante el algoritmo de supresión No-max realizado a continuación.
+-- nonMaximumSuppression
+--     :: Float -- ^ ThreshLow
+--     -> Float -- ^ ThreshHigh
+--     -> Channel (Float,Int) -- ^ Array donde cada pixel 
+--                            -- ^ es la dirección y la orientación
+--     -> IO (Channel Float) -- Imagen con los bordes limpios
+-- nonMaximumSuppression low high mgdirArr =
+--     R.computeP
+--     $ makeBordered2 (R.extent mgdirArr) -- Dimensión del array
+--                     1
+--                     (makeCursored (extent mgdirArr) id addDim compPts)
+--                     (R.fromFunction (extent mgdirArr) (const 0))
 
- where  lenImg          = R.size $ R.extent img
-        lenStrong       = R.size $ R.extent arrStrong
-        shImg           = R.extent img
+--     where {-# INLINE compPts #-}
+--           compPts idx@(sh :. i :. j)
+--             -- Si no sabemos la orientación, devolvemos 0
+--             | o == orient Undef = edge None
+--             -- Si la orientación es horizontal, devolvemos el máximo entre los vecinos horizontales
+--             | o == orient Horiz = retMax (getMagnitude (sh :. i :. j-1)) (getMagnitude (sh :. i :. j+1))
+--             -- Si la orientación es Vertical, devolvemos el máximo entre los vecinos verticales
+--             | o == orient Vert = retMax (getMagnitude (sh :. i-1 :. j)) (getMagnitude (sh :. i+1 :. j))
+--             -- Si la orientación es la diagonal negativa, entonces devolvemos el máximo de sus vecinos
+--             | o == orient NegDiag = retMax (getMagnitude (sh :. i-1 :.j-1 )) (getMagnitude (sh :. i+1 :.j+1 ))
+--             -- Si la orientación es la diagonal positiva, entonces devolvemos el máximo de sus vecinos
+--             | o == orient PosDiag = retMax (getMagnitude (sh :. i-1 :.j+1 )) (getMagnitude (sh :. i+1 :.j-1 ))
+--             | otherwise = edge None
 
-        wildfireIO
-         = do   -- Stack of image indices we still need to consider.
-                vStrong  <- R.toUnboxed <$> R.computeUnboxedP (R.delay arrStrong)
-                vStrong' <- VU.thaw vStrong
-                vStack   <- VM.grow vStrong' (lenImg - lenStrong)
+--             where
+--                 -- orientación del gradiente
+--                 !o = getOrient idx
+--                 -- Magnitud del gradiente
+--                 !m = getMagnitude (Z :. i :. j)
 
-                -- Burn in new edges.
-                vImg    <- VM.unsafeNew lenImg
-                VM.set vImg 0
-                burn vImg vStack lenStrong
-                vImg'   <- VU.unsafeFreeze vImg
-                return  (R.extent img, vImg')
+--                 getOrient = fst . R.unsafeIndex mgdirArr
+--                 getMagnitude  = snd . R.unsafeIndex mgdirArr
+
+--                 {-# INLINE retMax #-}
+--                 retMax !intensity1 !intensity2
+--                     | m < round low     = edge None
+--                     | m < intensity1    = edge None
+--                     | m < intensity2    = edge None
+--                     | m < round high    = edge Weak
+--                     | otherwise         = edge Strong
+-- {-# NOINLINE nonMaximumSuppression #-}
 
 
-        burn :: VM.IOVector Pixel8 -> VM.IOVector Int -> Int -> IO ()
-        burn !vImg !vStack !top
-         | top == 0
-         = return ()
+-- -- Selecciona los índices de los bordes que queremos quedarnos
+-- -- Esto estaría mucho mejor si se pudiera hacer junto al paso anterior,
+-- -- pero como Repa no permite una primitiva mapFilter fusionada,
+-- -- hay que realizar otra función.
+-- selectBestEdges
+--     ::  Channel Float -- ^ Nuestra imagen después de haberle hecho nonMaxSuppresssion
+--     -> IO (Array U DIM1 Int) -- ^ Vector que contiene los índices donde se encuentran los bordes
+-- selectBestEdges img =
+--      let vec = U.toUnboxed img -- Convertimos nuestro array en un vector  O(1)
 
-         | otherwise
-         = do   let !top'               =  top - 1
-                n                       <- VM.unsafeRead vStack top'
-                let (R.Z R.:. y R.:. x) = R.fromIndex (R.extent img) n
+--          match ix = vec `VU.unsafeIndex` ix == edge Strong -- Función booleana que nos dice si
+--          {-# INLINE match #-}                                                  -- el pixel tiene el valor 255 o no
 
-                let {-# INLINE push #-}
-                    push ix t =
-                      if R.inShape shImg ix
-                         then pushWeak vImg vStack ix t
-                         else return t
+--          process' ix = ix -- Devolvemos el índice donde se encuentra el pixel Strong (valor pix=255)
+--          {-# INLINE process' #-}
 
-                VM.write vImg n 255
-                 >>  push (R.Z R.:. y - 1 R.:. x - 1) top'
-                 >>= push (R.Z R.:. y - 1 R.:. x    )
-                 >>= push (R.Z R.:. y - 1 R.:. x + 1)
+--      in selectP match process' (size $ extent img) -- Esta función produce un vector a todos los elementos
+--                                                    -- de nuestra imagen. Si el pixel cumple el predicado,
+--                                                    -- vamos a guardar el índice donde se encuentre su posición.
+-- {-# NOINLINE selectBestEdges #-}
 
-                 >>= push (R.Z R.:. y     R.:. x - 1)
-                 >>= push (R.Z R.:. y     R.:. x + 1)
 
-                 >>= push (R.Z R.:. y + 1 R.:. x - 1)
-                 >>= push (R.Z R.:. y + 1 R.:. x    )
-                 >>= push (R.Z R.:. y + 1 R.:. x + 1)
+-- wildfire
+--     :: Channel Float -- ^ Imagen después de haber aplicado Non-max suppressión
+--     -> Array U DIM1 Int -- ^ Vector que contiene los índices donde se encuentran los bordes fuertes
+--     -> IO (Channel Pixel8) -- ^ Imagen habiendole aplicado todo el algoritmo Canny
+-- wildfire img arrStrong
+--  = do   (sh, vec)       <- wildfireIO
+--         return  $ sh `seq` vec `seq` R.fromUnboxed sh vec
 
-                 >>= burn vImg vStack
+--  where  lenImg          = R.size $ R.extent img
+--         lenStrong       = R.size $ R.extent arrStrong
+--         shImg           = R.extent img
 
-        -- If this ix is weak in the source then set it to strong in the
-        -- result and push the ix onto the stack.
-        {-# INLINE pushWeak #-}
-        pushWeak vImg vStack ix top
-         = do   let n           = R.toIndex (R.extent img) ix
-                xDst            <- VM.unsafeRead vImg n
-                let xSrc        = img `R.unsafeIndex` ix
+--         wildfireIO
+--          = do   -- Stack of image indices we still need to consider.
+--                 vStrong  <- R.toUnboxed <$> R.computeUnboxedP (R.delay arrStrong)
+--                 vStrong' <- VU.thaw vStrong
+--                 vStack   <- VM.grow vStrong' (lenImg - lenStrong)
 
-                if   xDst == 0 && xSrc == edge Weak
-                 then do
-                        VM.unsafeWrite vStack top (R.toIndex (R.extent img) ix)
-                        return (top + 1)
+--                 -- Burn in new edges.
+--                 vImg    <- VM.unsafeNew lenImg
+--                 VM.set vImg 0
+--                 burn vImg vStack lenStrong
+--                 vImg'   <- VU.unsafeFreeze vImg
+--                 return  (R.extent img, vImg')
 
-                 else   return top
-{-# NOINLINE wildfire #-}
+
+--         burn :: VM.IOVector Pixel8 -> VM.IOVector Int -> Int -> IO ()
+--         burn !vImg !vStack !top
+--          | top == 0
+--          = return ()
+
+--          | otherwise
+--          = do   let !top'               =  top - 1
+--                 n                       <- VM.unsafeRead vStack top'
+--                 let (R.Z R.:. y R.:. x) = R.fromIndex (R.extent img) n
+
+--                 let {-# INLINE push #-}
+--                     push ix t =
+--                       if R.inShape shImg ix
+--                          then pushWeak vImg vStack ix t
+--                          else return t
+
+--                 VM.write vImg n 255
+--                  >>  push (R.Z R.:. y - 1 R.:. x - 1) top'
+--                  >>= push (R.Z R.:. y - 1 R.:. x    )
+--                  >>= push (R.Z R.:. y - 1 R.:. x + 1)
+
+--                  >>= push (R.Z R.:. y     R.:. x - 1)
+--                  >>= push (R.Z R.:. y     R.:. x + 1)
+
+--                  >>= push (R.Z R.:. y + 1 R.:. x - 1)
+--                  >>= push (R.Z R.:. y + 1 R.:. x    )
+--                  >>= push (R.Z R.:. y + 1 R.:. x + 1)
+
+--                  >>= burn vImg vStack
+
+--         -- If this ix is weak in the source then set it to strong in the
+--         -- result and push the ix onto the stack.
+--         {-# INLINE pushWeak #-}
+--         pushWeak vImg vStack ix top
+--          = do   let n           = R.toIndex (R.extent img) ix
+--                 xDst            <- VM.unsafeRead vImg n
+--                 let xSrc        = img `R.unsafeIndex` ix
+
+--                 if   xDst == 0 && xSrc == edge Weak
+--                  then do
+--                         VM.unsafeWrite vStack top (R.toIndex (R.extent img) ix)
+--                         return (top + 1)
+
+--                  else   return top
+-- {-# NOINLINE wildfire #-}
 
 
 {--         
@@ -608,12 +659,14 @@ test = do
     output <- sobel imgGrey
     savePngImage "sobelrepa.png" (ImageYF $ exportBW output)
 
-    {-Filtro Laplace-} -- TODO: Revisar porque no funciona
-    -- let [r,g,b] = img -- Auxiliar
-    -- mask <- R.computeP $ R.map arrBoundMaskFunc (U.zip3 r g b) :: IO (Channel Float)
-    -- maskValue <- R.computeP $ R.map arrBoundValueFunc (U.zip3 r g b) :: IO (Channel Float)
-    -- lple <- laplace 2 mask maskValue maskValue
-    -- savePngImage "laplace.png" (ImageYF $ exportBW lple)
+    {-Filtro Laplace-}
+
+    lple <- laplace imgGrey 
+    savePngImage "laplace.png" (ImageYF $ exportBW lple)
+
+    {-Filtro Laplacian of Gaussian-}
+    -- laplaceGauss <- laplacianOfGaussian imgGrey
+    -- savePngImage "LoGRepa.png" (ImageYF $ exportBW laplaceGauss)
 
     {--CANNY --}
     -- cannyImg <- canny 1 50 170 img
@@ -627,7 +680,7 @@ test = do
     -- hstVector <- generateHists <$> mapM promoteInt img
     -- print hstVector
 
-
+    
 
 
 

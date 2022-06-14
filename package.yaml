@@ -49,7 +49,7 @@ dependencies:
 # Librería que nos permite crear benchmarks
 - criterion
 - deepseq
-- fclabels
+# - fclabels
 # - accelerate-examples
 
 

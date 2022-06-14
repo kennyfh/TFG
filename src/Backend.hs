@@ -11,7 +11,7 @@
 -- además de eliminar funciones muy expecíficas de esa librería :
 -- https://github.com/AccelerateHS/accelerate-examples/blob/a973ee423b5eadda6ef2e2504d2383f625e49821/lib/Data/Array/Accelerate/Examples/Internal/Backend.hs
 
-
+-- Backend para cambiar entre las distintas formas de ejecutar código acelerado
 module Backend
   where
 
@@ -41,10 +41,18 @@ runN PTX         = PTX.runN
 
 
 -- Conjunto de backends que podemos utilizar
-data Backend = Interpreter
-             | CPU
-             | PTX
+data Backend = Interpreter -- ^ Ejecuta código accelerate usando el intérprete de Accelerate (lento)
+             | CPU -- ^ Ejecutamos el código accelerate paralelizando mediante CPU
+             | PTX -- ^ Ejecutamos el código accelerate paralelizando mediante NVIDIA GPU
   deriving (P.Eq, P.Enum, P.Bounded)
+
+-- Función que selecciona el backend que queramos utilizar
+selectBackend :: Int -> Backend
+selectBackend 0 = Interpreter
+selectBackend 1 = CPU
+selectBackend 2 = PTX
+selectBackend _  = error "No existe ningún backend con ese número de entrada"
+
 
 -- Usa el interprete por defecto
 defaultBackend :: Backend
@@ -53,9 +61,4 @@ defaultBackend =
     Interpreter -> Interpreter
     _           -> succ Interpreter
 
--- Función que selecciona el backend que queramos utilizar
-selectBackend :: Int -> Backend
-selectBackend 0 = Interpreter
-selectBackend 1 = CPU
-selectBackend 2 = PTX
-selectBackend _  = error "No existe ningún backend con ese número de entrada"
+
