@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Accelerate
+      Backend
       Benchmark
       Juicy
       JuicyAccelerate
@@ -42,11 +43,13 @@ library
     , accelerate
     , accelerate-io-JuicyPixels
     , accelerate-io-repa
+    , accelerate-llvm-native
     , accelerate-llvm-ptx
     , base >=4.7 && <5
     , containers
     , criterion
     , deepseq
+    , fclabels
     , ffmpeg-light
     , gtk
     , gtk2hs-buildtools
@@ -68,11 +71,13 @@ executable TFG-kenflohua-exe
     , accelerate
     , accelerate-io-JuicyPixels
     , accelerate-io-repa
+    , accelerate-llvm-native
     , accelerate-llvm-ptx
     , base >=4.7 && <5
     , containers
     , criterion
     , deepseq
+    , fclabels
     , ffmpeg-light
     , gtk
     , gtk2hs-buildtools
@@ -95,11 +100,13 @@ test-suite TFG-kenflohua-test
     , accelerate
     , accelerate-io-JuicyPixels
     , accelerate-io-repa
+    , accelerate-llvm-native
     , accelerate-llvm-ptx
     , base >=4.7 && <5
     , containers
     , criterion
     , deepseq
+    , fclabels
     , ffmpeg-light
     , gtk
     , gtk2hs-buildtools

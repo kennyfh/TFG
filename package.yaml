@@ -30,14 +30,15 @@ dependencies:
 - repa
 # Modulo para la estructura de datos : Sequence 
 - containers
-# Modulo para importar tiempo (NO funciona muy bien o se está usando mal)
-# - timeit
 # Modulo para paralelizar elementos
 - parallel
 # Estructura de datos 
 - vector
 - accelerate
+# Accelerate GPU CUDA
 - accelerate-llvm-ptx
+# Accelerate CPU 
+- accelerate-llvm-native
 # Nos permite leer imagenes de juicypixels
 - accelerate-io-JuicyPixels
 # Nos permite transformar datos de Accelerate a Repa y viceversa
@@ -48,6 +49,8 @@ dependencies:
 # Librería que nos permite crear benchmarks
 - criterion
 - deepseq
+- fclabels
+# - accelerate-examples
 
 
 library:

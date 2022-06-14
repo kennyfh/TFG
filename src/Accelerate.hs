@@ -1,13 +1,25 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds   #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ViewPatterns      #-}
+
+{-# LANGUAGE BangPatterns  #-}
+{-# LANGUAGE TypeFamilies  #-}
+{-# LANGUAGE TypeOperators #-}
+{-# OPTIONS -fno-warn-orphans #-}
 module Accelerate where
 
 import JuicyAccelerate
 import Codec.Picture
 import Data.Array.Accelerate as A
 -- import Data.Array.Accelerate.Interpreter as I -- TODO: modificar esto por el interprete de CUDA 
-import Data.Array.Accelerate.LLVM.PTX
-import Prelude as P 
+import Data.Array.Accelerate.LLVM.PTX as PTX
+import Prelude as P
 import Control.Monad ((>=>))
+
+-- Instancias para poder realizar benchmarks
+
+
 
 promoteInt :: Acc (Matrix Pixel8) -> Acc (Matrix Int)
 promoteInt = A.map A.fromIntegral
@@ -32,10 +44,11 @@ demoteFloat =  A.map A.truncate
 --}
 
 
-gHistogram :: Acc (Matrix (Pixel8, Pixel8, Pixel8))-> (Acc (Vector Int), Acc (Vector Int), Acc (Vector Int))
+-- gHistogram :: Acc (Matrix (Pixel8, Pixel8, Pixel8))-> (Acc (Vector Int), Acc (Vector Int), Acc (Vector Int))
+gHistogram ::  Acc (Matrix (Pixel8, Pixel8, Pixel8)) -> Acc (Vector (Int,Int,Int))
 gHistogram arr =
     let (r,g,b) = A.unzip3 arr -- (Acc (Array sh a), Acc (Array sh b), Acc (Array sh c)) 
-    in (compute $ histogram $ flatten $ promoteInt r, compute $ histogram $ flatten $ promoteInt g,compute $ histogram $ flatten $ promoteInt b)
+    in A.zip3 (compute $ histogram $ flatten $ promoteInt r) (compute $ histogram $ flatten $ promoteInt g) (compute $ histogram $ flatten $ promoteInt b)
 
 -- Ejemplo sacado de:
 -- https://hackage.haskell.org/package/accelerate-1.3.0.0/docs/Data-Array-Accelerate.html
@@ -51,7 +64,7 @@ histogram img =
 --  |  _ \   / _ \/\  \ \ /\ / / 
 --  | |_) | | (_>  <   \ V  V /  
 --  |____/   \___/\/    \_/\_/   
-                              
+
 -- FORMULA PARA SACAR LA LUMINOSIDAD
 --     Y' = 0.2989 R + 0.5870 G + 0.1140 B 
 --     (https://en.wikipedia.org/wiki/Grayscale)
@@ -72,7 +85,7 @@ grayScale = A.map (\ pix ->
 --  | |  _   / _` | | | | | / __| / __| | |  / _` | | '_ \    | '_ \  | | | | | | | '__|
 --  | |_| | | (_| | | |_| | \__ \ \__ \ | | | (_| | | | | |   | |_) | | | | |_| | | |   
 --   \____|  \__,_|  \__,_| |___/ |___/ |_|  \__,_| |_| |_|   |_.__/  |_|  \__,_| |_|   
-                                                                                     
+
 -- --}
 -- Ejemplo modificado de accelerate-examples para no utilizar PRAGMAS
 
@@ -155,7 +168,7 @@ test  =  do
     putStrLn "Iniciando Test Fichero Accelerate.hs"
     {--Leyendo imágenes --}
     -- img <- readImageAcc "images/saitama.png"
-    -- img <- readImageAcc "data/images/lena_color.png"
+    img <- readImageAcc "data/images/lena_color.png"
 
     {--Creación Histograma--}
     -- let (r,g,b) = gHistogram (use img)
@@ -163,8 +176,8 @@ test  =  do
     -- print (run r, run g , run b)
 
     {--Blanco y Negro--}
-    -- let gr = run $ grayScale (use img)
-    -- savePngImage "saitamagrayscale.png" (ImageYF $ greyToJcy gr)
+    let gr = PTX.run $ grayScale (use img)
+    savePngImage "outputgreyacc.png" (ImageYF $ greyToJcy gr)
 
     {--Filtros--}
 

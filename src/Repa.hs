@@ -618,6 +618,7 @@ test = do
     {--CANNY --}
     -- cannyImg <- canny 1 50 170 img
     -- savePngImage "canny.png"
+    
     {-Histograma (Sequence)-}
     -- hstSequence <- generateHistograms <$> mapM promoteInt img
     -- print hstSequence
