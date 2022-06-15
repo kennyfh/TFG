@@ -1,0 +1,73 @@
+Inicio de los test
+benchmarking Laplace/Repa: Paralelismo CPU
+time                 4.981 ms   (4.882 ms .. 5.071 ms)
+                     0.989 R²   (0.969 R² .. 0.999 R²)
+mean                 5.240 ms   (5.079 ms .. 5.647 ms)
+std dev              753.4 μs   (299.4 μs .. 1.443 ms)
+variance introduced by outliers: 77% (severely inflated)
+
+benchmarking Laplace/Accelerate : Interprete
+time                 1.240 s    (1.207 s .. 1.286 s)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 1.255 s    (1.244 s .. 1.276 s)
+std dev              19.49 ms   (2.660 ms .. 24.93 ms)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking Laplace/Accelerate : CPU
+time                 211.0 μs   (208.6 μs .. 214.4 μs)
+                     0.990 R²   (0.977 R² .. 0.998 R²)
+mean                 237.3 μs   (227.6 μs .. 257.7 μs)
+std dev              47.66 μs   (29.21 μs .. 81.39 μs)
+variance introduced by outliers: 95% (severely inflated)
+
+benchmarking Laplace/Descanso entre GPU y CPU
+time                 13.89 ns   (13.85 ns .. 13.94 ns)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 13.99 ns   (13.95 ns .. 14.07 ns)
+std dev              188.1 ps   (138.0 ps .. 264.2 ps)
+variance introduced by outliers: 16% (moderately inflated)
+
+benchmarking Laplace/Accelerate : GPU
+time                 219.6 μs   (216.0 μs .. 223.1 μs)
+                     0.996 R²   (0.994 R² .. 0.998 R²)
+mean                 222.9 μs   (219.4 μs .. 228.2 μs)
+std dev              14.85 μs   (10.17 μs .. 22.37 μs)
+variance introduced by outliers: 63% (severely inflated)
+
+benchmarking Gaussian Smoothing/Repa: Paralelismo CPU
+time                 5.068 ms   (5.029 ms .. 5.119 ms)
+                     0.997 R²   (0.993 R² .. 1.000 R²)
+mean                 5.105 ms   (5.061 ms .. 5.230 ms)
+std dev              201.9 μs   (109.2 μs .. 366.7 μs)
+variance introduced by outliers: 21% (moderately inflated)
+
+benchmarking Gaussian Smoothing/Accelerate : Interprete
+time                 6.597 s    (6.192 s .. 7.009 s)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 6.910 s    (6.733 s .. 7.214 s)
+std dev              302.0 ms   (30.49 ms .. 372.6 ms)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking Gaussian Smoothing/Accelerate : CPU
+time                 417.5 μs   (412.5 μs .. 423.0 μs)
+                     0.993 R²   (0.983 R² .. 0.998 R²)
+mean                 484.2 μs   (465.5 μs .. 517.5 μs)
+std dev              86.95 μs   (54.86 μs .. 124.8 μs)
+variance introduced by outliers: 91% (severely inflated)
+
+benchmarking Gaussian Smoothing/Descanso entre GPU y CPU
+time                 13.82 ns   (13.78 ns .. 13.88 ns)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 13.97 ns   (13.89 ns .. 14.18 ns)
+std dev              407.5 ps   (141.5 ps .. 696.5 ps)
+variance introduced by outliers: 48% (moderately inflated)
+
+benchmarking Gaussian Smoothing/Accelerate : GPU
+time                 329.0 μs   (324.2 μs .. 335.6 μs)
+                     0.986 R²   (0.975 R² .. 0.995 R²)
+mean                 355.3 μs   (341.2 μs .. 375.8 μs)
+std dev              59.13 μs   (42.90 μs .. 91.25 μs)
+variance introduced by outliers: 91% (severely inflated)
+
+Fin de los test
+Fin del Main

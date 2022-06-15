@@ -35,7 +35,7 @@ import JuicyRepa
 import Accelerate
 import Codec.Picture
 
--- Función de prueba: https://github.com/haskell/criterion/blob/master/examples/Fibber.hs
+-- Función de prueba para testear Criterion: https://github.com/haskell/criterion/blob/master/examples/Fibber.hs
 fib m | m < 0     = error "negative!"
       | otherwise = go m
   where go 0 = 0
@@ -56,8 +56,8 @@ test :: IO ()
 test = do
     putStrLn "Inicio de los test"
     -- Imagen de prueba
-    imgRepa <- readImageIntoRepa "data/images/lena_color.png"
-    imgAcc <- readImageAcc "data/images/lena_color.png"
+    imgRepa <- readImageIntoRepa "data/images/1920x1080.jpg"
+    imgAcc <- readImageAcc "data/images/1920x1080.jpg"
     -- Histogram 
     let hstRepaV1 = R.generateHistogramsV1 <$> mapM R.promoteInt imgRepa
     let hstRepaV2 = R.generateHistogramsV2 <$> mapM R.promoteInt imgRepa
@@ -108,19 +108,23 @@ test = do
                                    bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.sobel . A.grayScale)) imgAcc,
                                    bench "Descanso entre GPU y CPU"  $ whnf fib 1,
                                    bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.sobel . A.grayScale)) imgAcc
-                                 ],
+                                 ]
+----------------------------------------------------------------------------------------------------------------
+                  -- bgroup "Laplace" [ bench "Repa: Paralelismo CPU"  $ whnfIO (R.laplace <$> R.toGrayScaleV1 imgRepa),
+                  --                  bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.laplace . A.grayScale)) imgAcc,
+                  --                  bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.laplace . A.grayScale)) imgAcc,
+                  --                  bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                  --                  bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.laplace . A.grayScale)) imgAcc
+                  --                  ],
 
-                  bgroup "Laplace" [ bench "Repa: Paralelismo CPU"  $ whnfIO (R.laplace <$> R.toGrayScaleV1 imgRepa),
-                                   bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.laplace . A.grayScale)) imgAcc,
-                                   bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.laplace . A.grayScale)) imgAcc,
-                                   bench "Descanso entre GPU y CPU"  $ whnf fib 1,
-                                   bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.laplace . A.grayScale)) imgAcc
-                                   ]
+                  -- bgroup "Gaussian Smoothing" [ bench "Repa: Paralelismo CPU"  $ whnfIO (R.gaussianSmoothing <$> R.toGrayScaleV1 imgRepa),
+                  --                  bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.gaussianSmoothing . A.grayScale)) imgAcc,
+                  --                  bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.gaussianSmoothing . A.grayScale)) imgAcc,
+                  --                  bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                  --                  bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.gaussianSmoothing . A.grayScale)) imgAcc
+                  --                  ]
 
                 ]
-
-
-
 
     putStrLn "Fin de los test"
 

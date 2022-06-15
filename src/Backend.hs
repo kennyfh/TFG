@@ -16,7 +16,7 @@ module Backend
   where
 
 import Prelude                                                      as P
-import Data.Array.Accelerate
+import Data.Array.Accelerate ( Arrays, Acc )
 import Data.Array.Accelerate.Trafo                                  ( Afunction )
 import Data.Array.Accelerate.Trafo.Sharing                          ( AfunctionR )
 import qualified Data.Array.Accelerate.Interpreter                  as Interp
