@@ -71,44 +71,44 @@ test = do
     let gaussRepaV2 = mapM (R.promote >=> R.blurV2 1) imgRepa
 
     defaultMain [
-                  -- bgroup "Histogram" [ bench "Repa V1: Sequencial"  $ nfIO hstRepaV1,
-                  --                      bench "Repa V2: Cada canal en paralelo"  $ nfIO hstRepaV2,
-                  --                      bench "Repa V3: Cada canal y fila en paralelo"  $ nfIO hstRepaV3,
-                  --                      bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) gHistogram) imgAcc,
-                  --                      bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) gHistogram) imgAcc,
-                  --                      bench "Descanso entre GPU y CPU"  $ whnf fib 1,
-                  --                      bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) gHistogram) imgAcc
-                  --                      ],
+                  bgroup "Histogram" [ bench "Repa V1: Sequencial"  $ nfIO hstRepaV1,
+                                       bench "Repa V2: Cada canal en paralelo"  $ nfIO hstRepaV2,
+                                       bench "Repa V3: Cada canal y fila en paralelo"  $ nfIO hstRepaV3,
+                                       bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) gHistogram) imgAcc,
+                                       bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) gHistogram) imgAcc,
+                                       bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                                       bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) gHistogram) imgAcc
+                                       ],
 
-                  -- bgroup "GreyScale" [ bench "Repa V1: Uso de zipWith"  $ nfIO bwRepaV1,
-                  --                      bench "Repa v2: Uso de zip3" $ nfIO bwRepaV2,
-                  --                      bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) A.grayScale) imgAcc,
-                  --                      bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) A.grayScale) imgAcc,
-                  --                      bench "Descanso entre GPU y CPU"  $ whnf fib 1,
-                  --                      bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) A.grayScale) imgAcc
-                  --                      ],
+                  bgroup "GreyScale" [ bench "Repa V1: Uso de zipWith"  $ nfIO bwRepaV1,
+                                       bench "Repa v2: Uso de zip3" $ nfIO bwRepaV2,
+                                       bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) A.grayScale) imgAcc,
+                                       bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) A.grayScale) imgAcc,
+                                       bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                                       bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) A.grayScale) imgAcc
+                                       ],
 
-                  -- bgroup "Guassian Blur" [ bench "Repa V1: Uso de 2 Kernels 1x5 y 5x1"  $ nfIO gaussRepaV1,
-                  --                          bench "Repa v2: Uso de 1 kernel 5x5" $ nfIO gaussRepaV2,
-                  --                          bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) A.blurRGB) imgAcc,
-                  --                          bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) A.blurRGB) imgAcc,
-                  --                          bench "Descanso entre GPU y CPU"  $ whnf fib 1,
-                  --                          bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) A.blurRGB) imgAcc
-                  --                       ],
+                  bgroup "Guassian Blur" [ bench "Repa V1: Uso de 2 Kernels 1x5 y 5x1"  $ nfIO gaussRepaV1,
+                                           bench "Repa v2: Uso de 1 kernel 5x5" $ nfIO gaussRepaV2,
+                                           bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) A.blurRGB) imgAcc,
+                                           bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) A.blurRGB) imgAcc,
+                                           bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                                           bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) A.blurRGB) imgAcc
+                                        ],
 
-                  -- bgroup "Mean" [ bench "Repa : Mean Filter"  $ whnf (mapM $ R.promote >=> R.meanF) imgRepa,
-                  --                 bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.meanRGBFilter . promoteImageF)) imgAcc,
-                  --                 bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.meanRGBFilter . promoteImageF)) imgAcc,
-                  --                 bench "Descanso entre GPU y CPU"  $ whnf fib 1,
-                  --                 bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.meanRGBFilter . promoteImageF)) imgAcc
-                  --                ],
+                  bgroup "Mean" [ bench "Repa : Mean Filter"  $ whnf (mapM $ R.promote >=> R.meanF) imgRepa,
+                                  bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.meanRGBFilter . promoteImageF)) imgAcc,
+                                  bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.meanRGBFilter . promoteImageF)) imgAcc,
+                                  bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                                  bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.meanRGBFilter . promoteImageF)) imgAcc
+                                 ],
 
-                  -- bgroup "Sobel" [ bench "Repa: Paralelismo CPU"  $ whnfIO (R.sobel <$> R.toGrayScaleV1 imgRepa),
-                  --                  bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.sobel . A.grayScale)) imgAcc,
-                  --                  bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.sobel . A.grayScale)) imgAcc,
-                  --                  bench "Descanso entre GPU y CPU"  $ whnf fib 1,
-                  --                  bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.sobel . A.grayScale)) imgAcc
-                  --                ]
+                  bgroup "Sobel" [ bench "Repa: Paralelismo CPU"  $ whnfIO (R.sobel <$> R.toGrayScaleV1 imgRepa),
+                                   bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.sobel . A.grayScale)) imgAcc,
+                                   bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.sobel . A.grayScale)) imgAcc,
+                                   bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                                   bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.sobel . A.grayScale)) imgAcc
+                                 ],
 ----------------------------------------------------------------------------------------------------------------
                   bgroup "Laplace" [ bench "Repa: Paralelismo CPU"  $ whnfIO (R.laplace <$> R.toGrayScaleV1 imgRepa),
                                    bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.laplace . A.grayScale)) imgAcc,
