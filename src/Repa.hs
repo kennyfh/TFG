@@ -144,10 +144,12 @@ pfold mappend xs  = (ys `par` zs) `pseq` (ys `mappend` zs) where
 {- 
   ____     ___    __        __
  | __ )   ( _ )   \ \      / /
- |  _ \   / _ \/\  \ \ /\ / / 
- | |_) | | (_>  <   \ V  V /  
- |____/   \___/\/    \_/\_/   
-                              
+ |  _ \   / _ \/\  \ \ /\ / / meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
+meanChannel img = stencil meanK clamp img
+  where meanK ::  Stencil3x3 Float -> Exp Float
+        meanK ((a,b,c)
+                 ,(d,e,f)
+                 ,(g,h,i)) = a/9+b/9+c/9+d/9+e/9+f/9+g/9+h/9+i/9
 FORMULA PARA SACAR LA LUMINOSIDAD
     Y' = 0.2989 R + 0.5870 G + 0.1140 B 
     (https://en.wikipedia.org/wiki/Grayscale)
@@ -179,7 +181,7 @@ luminance (r, g, b)
 toGrayScaleV2
     :: ImgRGB Pixel8 -- ^ Dada una imagen RGB 
     -> IO (Channel Float) -- ^ Devolvemos la luminosidad de nuestra imagen
-toGrayScaleV2 [r,g,b] = R.computeP . R.map luminance  $ U.zip3 r g b -- A
+toGrayScaleV2 [r,g,b] = R.computeP . R.map luminance  $ U.zip3 r g b -- zip3 = O(1)
 toGrayScaleV2 _ = error "No se puede hacer debido a que no hay los canales suficientes para realizar el blanco y negro"
 {-# NOINLINE toGrayScaleV2 #-}
 
@@ -233,6 +235,8 @@ blurV1 = go -- Es equivalente a esto : blur steps imgInit = go steps imgInit
 
 -- Kernel 5x5
 -- https://www.opencv-srf.com/2018/03/gaussian-blur.html
+-- https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
+-- SIGMA =1
 blurV2 :: Int -> Channel Float -> IO (Channel Float)
 blurV2 = go
     where go 0 !img = return img
@@ -340,28 +344,6 @@ laplace img =
                    -1  4 -1
                     0 -1  0 |]
 
-
-{--
-   ____                               _                     ____                                _     _       _                 
-  / ___|   __ _   _   _   ___   ___  (_)   __ _   _ __     / ___|   _ __ ___     ___     ___   | |_  | |__   (_)  _ __     __ _ 
- | |  _   / _` | | | | | / __| / __| | |  / _` | | '_ \    \___ \  | '_ ` _ \   / _ \   / _ \  | __| | '_ \  | | | '_ \   / _` |
- | |_| | | (_| | | |_| | \__ \ \__ \ | | | (_| | | | | |    ___) | | | | | | | | (_) | | (_) | | |_  | | | | | | | | | | | (_| |
-  \____|  \__,_|  \__,_| |___/ |___/ |_|  \__,_| |_| |_|   |____/  |_| |_| |_|  \___/   \___/   \__| |_| |_| |_| |_| |_|  \__, |
-                                                                                                                          |___/ 
-
---}
--- https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
---SIGMA =1
-
-gaussianSmoothing :: Channel Float -> IO (Channel Float)
-gaussianSmoothing img = R.computeP
-                        $ R.smap (/273)
-                        $ forStencil2 BoundClamp img
-                          [stencil2| 1  4  7  4  1
-                                     4  16 26 16 4
-                                     7  26 41 26 7
-                                     4  16 26 16 4
-                                     1  4  7  4  1|]
 
 
 {--

@@ -118,6 +118,29 @@ blurRGB img = A.zip3 (A.compute $ blur $ promoteFloat r) (A.compute $ blur $ pro
     where (r,g,b) = A.unzip3 img
 
 
+-- Gaussian blur 5x5
+-- https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
+--SIGMA =1
+gaussianSmoothing :: Acc (Matrix Float) -> Acc (Matrix Float)
+gaussianSmoothing img = A.map (/273) $ stencil gaussian clamp img
+  where gaussian :: Stencil5x5 Float -> Exp Float
+        gaussian ((a1,a2,a3,a4,a5)
+                 ,(b1,b2,b3,b4,b5)
+                 ,(c1,c2,c3,c4,c5)
+                 ,(d1,d2,d3,d4,d5),
+                 (e1,e2,e3,e4,e5)) = a1+(4*a2)+(7*a3)+(4*a4)+a5
+                                     + (4*b1)+(16*b2)+(26*b3)+(16*b4)+(4*b5)
+                                     + (7*c1)+(26*c2)+(41*c3)+(26*c4)+(7*c5)
+                                     + (4*d1)+(16*d2)+(26*d3)+(16*d4)+(4*d5)
+                                     + e1+(4*e2)+(7*e3)+(4*e4)+e5
+
+
+gaussianSmoothingRGB :: Acc (Matrix (Float,Float,Float)) -> Acc (Matrix (Float,Float,Float))
+gaussianSmoothingRGB img = A.zip3 (A.compute $ gaussianSmoothing r) (A.compute $ gaussianSmoothing g) (A.compute $ gaussianSmoothing b)
+  where (r,g,b) = A.unzip3 img
+
+
+
 
  {-
    __  __                        
@@ -132,12 +155,22 @@ meanRGBFilter :: Acc (Matrix (Float,Float,Float)) -> Acc (Matrix (Float,Float,Fl
 meanRGBFilter img= A.zip3 (A.compute $ meanChannel r) (A.compute $ meanChannel g) (A.compute $ meanChannel b)
   where (r,g,b) = A.unzip3 img
 
+-- VERSION SIN OPTIMIZAR
+-- meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
+-- meanChannel img = stencil meanK clamp img
+--   where meanK ::  Stencil3x3 Float -> Exp Float
+--         meanK ((a,b,c)
+--                  ,(d,e,f)
+--                  ,(g,h,i)) = a/9+b/9+c/9+d/9+e/9+f/9+g/9+h/9+i/9
+
+-- VERSION optimizada
 meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
-meanChannel img = stencil meanK clamp img
+meanChannel img = A.map (/9) $ stencil meanK clamp img
   where meanK ::  Stencil3x3 Float -> Exp Float
         meanK ((a,b,c)
                  ,(d,e,f)
-                 ,(g,h,i)) = a/9+b/9+c/9+d/9+e/9+f/9+g/9+h/9+i/9
+                 ,(g,h,i)) = a+b+c+d+e+f+g+h+i
+
 
 
 {-
@@ -194,31 +227,6 @@ laplace img = stencil stencilLaplace clamp img
         stencilLaplace ((a,b,c)
                        ,(d,e,f)
                        ,(g,h,i)) = -b-d+(4*e)-f-h
-
-{--
-   ____                               _                     ____                                _     _       _                 
-  / ___|   __ _   _   _   ___   ___  (_)   __ _   _ __     / ___|   _ __ ___     ___     ___   | |_  | |__   (_)  _ __     __ _ 
- | |  _   / _` | | | | | / __| / __| | |  / _` | | '_ \    \___ \  | '_ ` _ \   / _ \   / _ \  | __| | '_ \  | | | '_ \   / _` |
- | |_| | | (_| | | |_| | \__ \ \__ \ | | | (_| | | | | |    ___) | | | | | | | | (_) | | (_) | | |_  | | | | | | | | | | | (_| |
-  \____|  \__,_|  \__,_| |___/ |___/ |_|  \__,_| |_| |_|   |____/  |_| |_| |_|  \___/   \___/   \__| |_| |_| |_| |_| |_|  \__, |
-                                                                                                                          |___/ 
-
---}
--- https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
---SIGMA =1
-gaussianSmoothing :: Acc (Matrix Float) -> Acc (Matrix Float)
-gaussianSmoothing img = A.map (/273) $ stencil gaussian clamp img
-  where gaussian :: Stencil5x5 Float -> Exp Float
-        gaussian ((a1,a2,a3,a4,a5)
-                 ,(b1,b2,b3,b4,b5)
-                 ,(c1,c2,c3,c4,c5)
-                 ,(d1,d2,d3,d4,d5),
-                 (e1,e2,e3,e4,e5)) = a1+(4*a2)+(7*a3)+(4*a4)+a5
-                                     + (4*b1)+(16*b2)+(26*b3)+(16*b4)+(4*b5)
-                                     + (7*c1)+(26*c2)+(41*c3)+(26*c4)+(7*c5)
-                                     + (4*d1)+(16*d2)+(26*d3)+(16*d4)+(4*d5)
-                                     + e1+(4*e2)+(7*e3)+(4*e4)+e5
-
 
 
 test :: IO ()

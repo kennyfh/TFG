@@ -115,16 +115,51 @@ test = do
                                    bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.laplace . A.grayScale)) imgAcc,
                                    bench "Descanso entre GPU y CPU"  $ whnf fib 1,
                                    bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.laplace . A.grayScale)) imgAcc
-                                   ],
-
-                  bgroup "Gaussian Smoothing" [ bench "Repa: Paralelismo CPU"  $ whnfIO (R.gaussianSmoothing <$> R.toGrayScaleV1 imgRepa),
-                                   bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.gaussianSmoothing . A.grayScale)) imgAcc,
-                                   bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.gaussianSmoothing . A.grayScale)) imgAcc,
-                                   bench "Descanso entre GPU y CPU"  $ whnf fib 1,
-                                   bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.gaussianSmoothing . A.grayScale)) imgAcc
                                    ]
-
                 ]
 
     putStrLn "Fin de los test"
 
+
+
+test2 :: IO ()
+test2 = do
+
+  imgRepa <- readImageIntoRepa "data/images/960x540.jpg"
+  imgAcc <- readImageAcc "data/images/960x540.jpg"
+
+  -- Gauss blur (RGB)
+  -- Gaussian Blur
+  let gaussRepaV1RGB =  mapM (R.promote >=> R.blurV1 1) imgRepa
+  let gaussRepaV2RGB = mapM (R.promote >=> R.blurV2 1) imgRepa
+
+  defaultMain [
+
+                  bgroup "Gaussian Blur (RGB) Uso kernel 1x5 y 5x1" [ bench "Repa V1: Uso de 2 Kernels 1x5 y 5x1"  $ nfIO gaussRepaV1RGB,
+                                           bench "AccelerateV1 : Interprete" $ whnf (B.run1 (selectBackend 0) A.blurRGB) imgAcc,
+                                           bench "AccelerateV1 : CPU" $ whnf (B.run1 (selectBackend 1) A.blurRGB) imgAcc,
+                                           bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                                           bench "AccelerateV1 : GPU" $ whnf (B.run1 (selectBackend 2) A.blurRGB) imgAcc
+
+                  ],
+
+                  bgroup "Gaussian Blur (RGB) Uso kernel 5x5 " [ bench "Repa v2: Uso de 1 kernel 5x5" $ nfIO gaussRepaV2RGB,
+                                           bench "AccelerateV2 : Interprete" $ whnf (B.run1 (selectBackend 0) (A.gaussianSmoothingRGB . promoteImageF)) imgAcc,
+                                           bench "AccelerateV2 : CPU" $ whnf (B.run1 (selectBackend 1) (A.gaussianSmoothingRGB . promoteImageF)) imgAcc,
+                                           bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                                           bench "AccelerateV2 : GPU" $ whnf (B.run1 (selectBackend 2) (A.gaussianSmoothingRGB . promoteImageF)) imgAcc
+
+                  ],
+
+                  bgroup "Mean (Optimizado)" [ bench "Repa : Mean Filter"  $ whnf (mapM $ R.promote >=> R.meanF) imgRepa,
+                                  bench "Accelerate : Interprete" $ whnf (B.run1 (selectBackend 0) (A.meanRGBFilter . promoteImageF)) imgAcc,
+                                  bench "Accelerate : CPU" $ whnf (B.run1 (selectBackend 1) (A.meanRGBFilter . promoteImageF)) imgAcc,
+                                  bench "Descanso entre GPU y CPU"  $ whnf fib 1,
+                                  bench "Accelerate : GPU" $ whnf (B.run1 (selectBackend 2) (A.meanRGBFilter . promoteImageF)) imgAcc
+                                 ]
+
+              
+                ]
+
+
+  putStrLn "Hehe"

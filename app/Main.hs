@@ -11,5 +11,5 @@ main :: IO ()
 main =  do
     -- Rx.test
     -- Ax.test
-    B.test
+    B.test2
     putStrLn  "Fin del Main"
