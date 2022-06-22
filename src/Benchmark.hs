@@ -56,8 +56,8 @@ test :: IO ()
 test = do
     putStrLn "Inicio de los test"
     -- Imagen de prueba
-    imgRepa <- readImageIntoRepa "data/images/576x1024.jpg"
-    imgAcc <- readImageAcc "data/images/576x1024.jpg"
+    imgRepa <- readImageIntoRepa "data/images/lena_color.png"
+    imgAcc <- readImageAcc "data/images/lena_color.png"
     -- Histogram 
     let hstRepaV1 = R.generateHistogramsV1 <$> mapM R.promoteInt imgRepa
     let hstRepaV2 = R.generateHistogramsV2 <$> mapM R.promoteInt imgRepa
