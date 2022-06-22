@@ -125,8 +125,8 @@ test = do
 test2 :: IO ()
 test2 = do
 
-  imgRepa <- readImageIntoRepa "data/images/1280x720.jpg"
-  imgAcc <- readImageAcc "data/images/1280x720.jpg"
+  imgRepa <- readImageIntoRepa "data/images/1920x1080.jpg"
+  imgAcc <- readImageAcc "data/images/1920x1080.jpg"
 
   -- Gauss blur (RGB)
   -- Gaussian Blur
