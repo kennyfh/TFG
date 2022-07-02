@@ -65,6 +65,41 @@ promoteInt = computeP . R.map func
                                   |___/                            
 --}
 
+-- Versión Alfa (NO FUNCIONA DEBIDO A QUE ES LENTO)
+-- type RGB = (Pixel8,Pixel8,Pixel8)
+-- type Img a = Array U DIM2 a
+-- type Histogram = Array D DIM1 Int
+-- type Histograms = (Histogram,Histogram,Histogram)
+
+-- fst' :: (a,b,c) -> a
+-- fst' (a,_,_)=a
+
+-- snd' :: (a,b,c) -> b
+-- snd' (_,b,_)=b
+
+-- third' :: (a,b,c) -> c
+-- third' (_,_,z) = z
+
+-- computeHistograms :: Histograms -> (Array U DIM1 Int,Array U DIM1 Int,Array U DIM1 Int)
+-- computeHistograms (a,b,c)= (R.computeS a,R.computeS b,R.computeS c)
+
+-- doHistogramRGB :: Img RGB -> Histograms
+-- doHistogramRGB img =
+--     let (Z :. nrows :. ncolums) = R.extent img
+--         zero = R.fromFunction (Z :. 256) (\_ -> 0::Int)
+--         incElem idx x = RU.unsafeTraverse x id (\l i -> l i + if i==(Z:.fromIntegral idx) then 1 else 0)
+--     in Prelude.foldl (\(hstR,hstG,hstB) (rows,colums) ->
+--         let val = unsafeIndex img (Z :. rows :. colums)
+--             r = fst' val
+--             g = snd' val
+--             b = third' val
+--         in (incElem r hstR, incElem g hstG,incElem b hstB))
+--         (zero,zero,zero)
+--         [(rows,colums) | rows <- [0..nrows], colums <- [0..ncolums-1]]
+
+
+
+
 {-Tipos de Datos-}
 type Histogram = Seq Int
 type Histograms = [Histogram]
@@ -142,21 +177,21 @@ pfold mappend xs  = (ys `par` zs) `pseq` (ys `mappend` zs) where
   zs = pfold mappend zs'
 
 {- 
-  ____     ___    __        __
- | __ )   ( _ )   \ \      / /
- |  _ \   / _ \/\  \ \ /\ / / meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
-meanChannel img = stencil meanK clamp img
-  where meanK ::  Stencil3x3 Float -> Exp Float
-        meanK ((a,b,c)
-                 ,(d,e,f)
-                 ,(g,h,i)) = a/9+b/9+c/9+d/9+e/9+f/9+g/9+h/9+i/9
+--   ____     ___    __        __
+--  | __ )   ( _ )   \ \      / /
+--  |  _ \   / _ \/\  \ \ /\ / / 
+--  | |_) | | (_>  <   \ V  V /  
+--  |____/   \___/\/    \_/\_/              
+ 
 FORMULA PARA SACAR LA LUMINOSIDAD
     Y' = 0.2989 R + 0.5870 G + 0.1140 B 
-    (https://en.wikipedia.org/wiki/Grayscale)
+
+De:  http://poynton.ca/notes/colour_and_gamma/ColorFAQ.html#RTFToC11
+
 -}
 
 -- 1º Version usando zipwith
-toGrayScaleV1 
+toGrayScaleV1
     :: ImgRGB Pixel8 -- ^ Dada una imagen RGB
     -> IO (Channel Float) -- ^ Devolvemos una imagen 
 toGrayScaleV1 img = R.computeP $ R.zipWith (+) b (R.zipWith (+) r g)
@@ -179,10 +214,12 @@ luminance (r, g, b)
 
 -- toGrayScale :: ImgRGB Pixel8 -> IO (Channel Float)
 toGrayScaleV2
-    :: ImgRGB Pixel8 -- ^ Dada una imagen RGB 
-    -> IO (Channel Float) -- ^ Devolvemos la luminosidad de nuestra imagen
-toGrayScaleV2 [r,g,b] = R.computeP . R.map luminance  $ U.zip3 r g b -- zip3 = O(1)
-toGrayScaleV2 _ = error "No se puede hacer debido a que no hay los canales suficientes para realizar el blanco y negro"
+    :: ImgRGB Pixel8 -- ^ Dada una imagen RGB [Channel Float , Channel Float, Channel Float]
+    -> IO (Channel Float) -- ^ Devolvemos la luminosidad de nuestra imagen Channel Float
+toGrayScaleV2 [r,g,b] = R.computeP
+                        . R.map luminance
+                        $ U.zip3 r g b
+toGrayScaleV2 _ = error "No hay bandas suficientes"
 {-# NOINLINE toGrayScaleV2 #-}
 
 
@@ -233,6 +270,13 @@ blurV1 = go -- Es equivalente a esto : blur steps imgInit = go steps imgInit
                  go (n-1) sepy -- Y repetimos todo el proceso 
 {-# NOINLINE blurV1 #-}
 
+
+-- Uso de 2 kernels (Versión sin iteraciones)
+-- blurV1 :: Channel Float -> IO (Channel Float)
+-- blurV1 = blurX >=> blurY -- blurV1 img = (blurX >=> blurY) img
+-- {-# NOINLINE blurV1 #-}
+
+
 -- Kernel 5x5
 -- https://www.opencv-srf.com/2018/03/gaussian-blur.html
 -- https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
@@ -240,8 +284,8 @@ blurV1 = go -- Es equivalente a esto : blur steps imgInit = go steps imgInit
 blurV2 :: Int -> Channel Float -> IO (Channel Float)
 blurV2 = go
     where go 0 !img = return img
-          go n !img = do 
-                        blurStep <- R.computeP 
+          go n !img = do
+                        blurStep <- R.computeP
                                     $ R.smap (/273)
                                     $ forStencil2 BoundClamp img
                                       [stencil2| 1 4  7  4  1 
@@ -249,9 +293,22 @@ blurV2 = go
                                                  7 26 41 26 7
                                                  4 16 26 16 4
                                                  1 4  7  4  1 |]
-                             
+
                         go (n-1) blurStep
 {-# NOINLINE blurV2 #-}
+
+
+-- blurV2 :: Channel Float -> IO (Channel Float)
+-- blurV2 img = R.computeP
+--              $ R.smap (/273)
+--              $ forStencil2 BoundClamp img
+--                [stencil2| 1 4  7  4  1 
+--                           4 16 26 16 4
+--                           7 26 41 26 7
+--                           4 16 26 16 4
+--                           1 4  7  4  1 |]
+
+-- {-# NOINLINE blurV2 #-}
 
 
  {-
@@ -261,11 +318,11 @@ blurV2 = go
  | |  | | |  __/ | (_| | | | | |
  |_|  |_|  \___|  \__,_| |_| |_|
                                  
- -} 
+ -}
 
 -- https://homepages.inf.ed.ac.uk/rbf/HIPR2/mean.htm
 
-meanF 
+meanF
     ::  Channel Float --  ^ Imagen de Entrada
     -> IO (Channel Float) -- ^ Imagen de Salida
 meanF img = R.computeP
@@ -308,9 +365,9 @@ gradY img = R.computeP -- Computamos todo de forma paralela
 -- Normalmente, Sobel usa 2 kernels 3x3, aunque según wikipedia,
 -- cada kernel podemos descomponerlo en otros 2 filtros.
 
--- Magnitude G = Sqrt (Gx^2 + Gy^2)
-magnitude :: Float -> Float -> Float
-magnitude x y = sqrt (x*x + y*y)
+-- -- Magnitude G = Sqrt (Gx^2 + Gy^2)
+-- magnitude :: Float -> Float -> Float
+-- magnitude x y = sqrt (x*x + y*y)
 
 -- Para usar este algoritmo, en primer lugar debemos sacar la luminosidad
 -- de la imagen RGB (pasarlo a blanco y negro)
@@ -320,7 +377,7 @@ sobel
 sobel img = do
     gx <- gradX img -- Calculamos el gradiente de X de la imagen
     gy <- gradY img -- Calculamos el gradiente de Y de la imagen
-    R.computeP $ R.zipWith magnitude gx gy -- Realizamos G = Sqrt (Gx^2 + Gy^2) a cada
+    R.computeP $ R.zipWith (\x y -> sqrt (x*x + y*y)) gx gy -- Realizamos G = Sqrt (Gx^2 + Gy^2) a cada
                                            -- pixel de la imagen
 
 {-
@@ -337,8 +394,8 @@ sobel img = do
 laplace
     :: Channel Float
     -> IO (Channel Float)
-laplace img = 
-    R.computeP 
+laplace img =
+    R.computeP
     $ forStencil2 BoundClamp img
         [stencil2|  0 -1  0 
                    -1  4 -1
@@ -628,23 +685,23 @@ test :: IO ()
 test = do
     putStrLn "Iniciando Test Fichero Repa.hs"
     -- img <- readImageIntoRepa "data/images/saitama.png"
-    img <- readImageIntoRepa "data/images/lena_color.png"
+    -- img <- readImageIntoRepa "data/images/lena_color.png"
     {-FIltro Gaussiano-}
     -- blurImg <- mapM (promote >=> blur 4 >=> demote) img
     -- savePngImage "blursaitama.png" (ImageRGB8 $ repaToJuicy blurImg)
 
     {-Black and White-}
-    imgGrey <- toGrayScaleV2 img
-    -- savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
+    -- imgGrey <- toGrayScaleV2 img
+    -- -- savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
 
     {-Filtro Sobel-}
-    output <- sobel imgGrey
-    savePngImage "sobelrepa.png" (ImageYF $ exportBW output)
+    -- output <- sobel imgGrey
+    -- savePngImage "sobelrepa.png" (ImageYF $ exportBW output)
 
     {-Filtro Laplace-}
 
-    lple <- laplace imgGrey 
-    savePngImage "laplace.png" (ImageYF $ exportBW lple)
+    -- lple <- laplace imgGrey 
+    -- savePngImage "laplace.png" (ImageYF $ exportBW lple)
 
     {-Filtro Laplacian of Gaussian-}
     -- laplaceGauss <- laplacianOfGaussian imgGrey
@@ -653,7 +710,7 @@ test = do
     {--CANNY --}
     -- cannyImg <- canny 1 50 170 img
     -- savePngImage "canny.png"
-    
+
     {-Histograma (Sequence)-}
     -- hstSequence <- generateHistograms <$> mapM promoteInt img
     -- print hstSequence
@@ -661,9 +718,9 @@ test = do
     {-Histograma (Vector)-}
     -- hstVector <- generateHists <$> mapM promoteInt img
     -- print hstVector
-
-    
-
+    let arr = fromListUnboxed (Z :. 7) [7,6..1] :: Array U DIM1 Int
+    let x =  R.computeS . R.map (*2) $ R.map (+1) arr :: Array U DIM1 Int
+    print x
 
 
     putStrLn "El test ha ido correctamente"

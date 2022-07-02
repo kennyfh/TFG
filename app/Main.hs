@@ -11,5 +11,10 @@ main :: IO ()
 main =  do
     -- Rx.test
     -- Ax.test
-    B.test2
+    -- B.test2
+    -- B.testGrayScale
+    -- B.testSobel
+    -- B.testHistograma
+    -- B.testLaplace
+    Rx.test
     putStrLn  "Fin del Main"

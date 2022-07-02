@@ -37,6 +37,11 @@ promoteImageF :: Acc (Matrix RGB) -> Acc (Matrix (Float,Float,Float))
 promoteImageF img = A.zip3 (A.compute $ promoteFloat r) (A.compute $ promoteFloat g) (A.compute $ promoteFloat b)
     where (r,g,b) = A.unzip3 img
 
+demoteimageP :: Acc (Matrix (Float,Float,Float)) -> Acc (Matrix RGB)
+demoteimageP img = A.zip3 (A.compute $ demoteFloat r) (A.compute $ demoteFloat g) (A.compute $ demoteFloat b)
+    where (r,g,b) = A.unzip3 img
+
+
 {--
   _   _   _         _                                              
  | | | | (_)  ___  | |_    ___     __ _   _ __    __ _   _ __ ___  
@@ -90,7 +95,6 @@ grayScale = A.map (\ pix ->
 --   \____|  \__,_|  \__,_| |___/ |___/ |_|  \__,_| |_| |_|   |_.__/  |_|  \__,_| |_|   
 
 -- --}
--- Ejemplo modificado de accelerate-examples para no utilizar PRAGMAS
 
 -- Modificación del código: https://hackage.haskell.org/package/accelerate-1.3.0.0/docs/Data-Array-Accelerate.html
 -- para evitar el uso de la mayoría de los PRAGMAS
@@ -109,7 +113,8 @@ convolve1x5 kernel ((_,a,_), (_,b,_), (_,c,_), (_,d,_), (_,e,_))
 -- 2 pasadas por cada eje usando 
 -- blur :: (P.Num a, Elt a, P.Fractional a, P.Num (Exp a)) => Acc (Matrix a) -> Acc (Matrix a)
 blur :: Acc (Matrix Float) -> Acc (Matrix Float)
-blur = stencil (convolve5x1 gaussian) clamp . stencil (convolve1x5 gaussian) clamp
+blur = stencil (convolve5x1 gaussian) clamp 
+       . stencil (convolve1x5 gaussian) clamp
     where gaussian = P.map A.constant [0.06136,0.24477,0.38774,0.24477,0.06136]
 
 -- TODO: modificar blur para realizar varias iteraciones
@@ -117,22 +122,28 @@ blurRGB :: Acc (Matrix RGB) -> Acc (Matrix (Float,Float,Float))
 blurRGB img = A.zip3 (A.compute $ blur $ promoteFloat r) (A.compute $ blur $ promoteFloat g) (A.compute $ blur $ promoteFloat b)
     where (r,g,b) = A.unzip3 img
 
+blurRGBV2 :: Acc (Matrix (Float,Float,Float)) -> Acc (Matrix (Float,Float,Float))
+blurRGBV2 img = A.zip3 (A.compute $ blur r) (A.compute $ blur g) (A.compute $ blur b)
+    where (r,g,b) = A.unzip3 img
+
 
 -- Gaussian blur 5x5
 -- https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
 --SIGMA =1
 gaussianSmoothing :: Acc (Matrix Float) -> Acc (Matrix Float)
-gaussianSmoothing img = A.map (/273) $ stencil gaussian clamp img
+gaussianSmoothing img = 
+  A.map (/273) $ stencil gaussian clamp img
   where gaussian :: Stencil5x5 Float -> Exp Float
         gaussian ((a1,a2,a3,a4,a5)
                  ,(b1,b2,b3,b4,b5)
                  ,(c1,c2,c3,c4,c5)
                  ,(d1,d2,d3,d4,d5),
-                 (e1,e2,e3,e4,e5)) = a1+(4*a2)+(7*a3)+(4*a4)+a5
-                                     + (4*b1)+(16*b2)+(26*b3)+(16*b4)+(4*b5)
-                                     + (7*c1)+(26*c2)+(41*c3)+(26*c4)+(7*c5)
-                                     + (4*d1)+(16*d2)+(26*d3)+(16*d4)+(4*d5)
-                                     + e1+(4*e2)+(7*e3)+(4*e4)+e5
+                 (e1,e2,e3,e4,e5)) =
+                    a1+(4*a2)+(7*a3)+(4*a4)+a5
+                    + (4*b1)+(16*b2)+(26*b3)+(16*b4)+(4*b5)
+                    + (7*c1)+(26*c2)+(41*c3)+(26*c4)+(7*c5)
+                    + (4*d1)+(16*d2)+(26*d3)+(16*d4)+(4*d5)
+                    + e1+(4*e2)+(7*e3)+(4*e4)+e5
 
 
 gaussianSmoothingRGB :: Acc (Matrix (Float,Float,Float)) -> Acc (Matrix (Float,Float,Float))
@@ -156,20 +167,20 @@ meanRGBFilter img= A.zip3 (A.compute $ meanChannel r) (A.compute $ meanChannel g
   where (r,g,b) = A.unzip3 img
 
 -- VERSION SIN OPTIMIZAR
--- meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
--- meanChannel img = stencil meanK clamp img
---   where meanK ::  Stencil3x3 Float -> Exp Float
---         meanK ((a,b,c)
---                  ,(d,e,f)
---                  ,(g,h,i)) = a/9+b/9+c/9+d/9+e/9+f/9+g/9+h/9+i/9
-
--- VERSION optimizada
 meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
-meanChannel img = A.map (/9) $ stencil meanK clamp img
+meanChannel img = stencil meanK clamp img
   where meanK ::  Stencil3x3 Float -> Exp Float
         meanK ((a,b,c)
                  ,(d,e,f)
-                 ,(g,h,i)) = a+b+c+d+e+f+g+h+i
+                 ,(g,h,i)) = a/9+b/9+c/9+d/9+e/9+f/9+g/9+h/9+i/9
+
+-- -- VERSION optimizada
+-- meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
+-- meanChannel img = A.map (/9) $ stencil meanK clamp img
+--   where meanK ::  Stencil3x3 Float -> Exp Float
+--         meanK ((a,b,c)
+--                  ,(d,e,f)
+--                  ,(g,h,i)) = a+b+c+d+e+f+g+h+i
 
 
 
@@ -261,3 +272,6 @@ test  =  do
 
 
     putStrLn "Fin del Test fichero Acelerate.hs"
+
+
+
