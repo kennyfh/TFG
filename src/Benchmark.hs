@@ -173,8 +173,6 @@ testImages =  do
   putStrLn "Fin del test"
 
 
-
-
 testGrayScale :: IO()
 testGrayScale = do
 
@@ -301,15 +299,6 @@ rgbToJcy2 arr = imageOfArray $ prom arr
           prom mat =  Native.run $ A.map (\p -> let (r,g,b) = unlift p in PixelRGB8_ r g b) (use arr)
 
 
-
--- -- Función que nos transforma todos los frames en JuixyPixels en Accelerate
--- accelerateFrames :: [Image PixelRGB8] -> [A.Matrix RGB]
--- accelerateFrames xs =
---     let bs = P.map imgToArr xs
---         cs = bs `using` parList rdeepseq
---         in cs
-
-
 vidGaussRepa ::  IO ()
 vidGaussRepa = do
   putStrLn "Inicio del test de video (Repa)"
@@ -328,3 +317,20 @@ fun img = do
     xs <- mapM (R.promote >=> R.blurV1 2 >=> R.demote) [r,g,b]
     return (repaToJuicy xs)
 
+
+scalarp :: ([Float],[Float]) -> Float
+scalarp p@(xs,ys)  =  P.foldl (+) 0 (P.zipWith (*) xs ys)
+
+
+scalarPTest :: IO ()
+scalarPTest = do
+  putStrLn "Pruebas Producto scalar"
+  let arrRepa = fromFunction (Z :.1000) (\( Z :. i) -> i +1 :: Int )
+  let arrAcc =  generate ( I1 10) (\( I1 i) -> i + 1) :: Acc (Vector Int)
+  defaultMain [
+                bgroup "Prueba" [ bench "1"  $  nf scalarp ([1..1000],[1..1000]),
+                                  bench "2" $  nf scalarp ([1..1000],[1..1000])
+                  
+                ]
+
+              ]

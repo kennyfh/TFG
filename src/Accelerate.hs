@@ -22,8 +22,10 @@ import Data.Array.Accelerate.LLVM.PTX as PTX
 import Prelude as P
 import Control.Monad ((>=>))
 
--- Instancias para poder realizar benchmarks
 
+-- Función producto escalar en Accelerate 
+scalarpAcc :: Acc (Vector Float) -> Acc (Vector Float) -> Acc (Scalar Float)
+scalarpAcc xs ys = fold (+) 0 (A.zipWith (*) xs ys )
 
 
 promoteInt :: Acc (Matrix Pixel8) -> Acc (Matrix Int)

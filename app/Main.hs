@@ -10,7 +10,7 @@ import Benchmark as B
 main :: IO ()
 main =  do
     -- B.vidGaussRepa
-    B.vidGaussAcc
+    -- B.vidGaussAcc
     -- Rx.test
     -- Ax.test
     -- B.testGrayScale
@@ -19,6 +19,6 @@ main =  do
     -- B.testLaplace
     -- Rx.test
     -- B.testB
-
+    B.scalarPTest
 
     putStrLn  "Fin del Main"
