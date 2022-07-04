@@ -1,3 +1,11 @@
+-- |
+-- Module:      : JuicyRepa
+-- Copyright    : [2022] Kenny Jesús Flores Huamán
+-- License      : BSD3
+--
+-- Maintainer   : Kenny Jesús Flores Huamán <kennyjesus@pm.me>
+-- Stability    : experimental
+-- Portability  : non-portable (GHC extensions)
 module JuicyRepa where
 
 
@@ -53,12 +61,3 @@ exportBand img = generateImage func w h
     where Z :. w :. h = extent img
           func x y = img ! (Z :. x :. y)
 
-
-
-{-- TEST --}
--- test :: IO ()
--- test  = do
---     -- test <- readImageJuicy "saitama.png"
---     test <- readImageIntoRepa "saitama.png"
---     print $ head test
---     putStrLn "Hello World"

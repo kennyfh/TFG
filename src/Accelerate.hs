@@ -1,3 +1,12 @@
+-- |
+-- Module:      : Accelerate
+-- Copyright    : [2022] Kenny Jesús Flores Huamán
+-- License      : BSD3
+--
+-- Maintainer   : Kenny Jesús Flores Huamán <kennyjesus@pm.me>
+-- Stability    : experimental
+-- Portability  : non-portable (GHC extensions)
+
 {-# LANGUAGE ConstraintKinds   #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -162,7 +171,7 @@ meanRGBFilter :: Acc (Matrix (Float,Float,Float)) -> Acc (Matrix (Float,Float,Fl
 meanRGBFilter img= A.zip3 (A.compute $ meanChannel r) (A.compute $ meanChannel g) (A.compute $ meanChannel b)
   where (r,g,b) = A.unzip3 img
 
--- VERSION 1
+
 meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
 meanChannel img = stencil meanK clamp img
   where meanK ::  Stencil3x3 Float -> Exp Float
@@ -170,13 +179,7 @@ meanChannel img = stencil meanK clamp img
                  ,(d,e,f)
                  ,(g,h,i)) = a/9+b/9+c/9+d/9+e/9+f/9+g/9+h/9+i/9
 
--- -- VERSION 2
--- meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
--- meanChannel img = A.map (/9) $ stencil meanK clamp img
---   where meanK ::  Stencil3x3 Float -> Exp Float
---         meanK ((a,b,c)
---                  ,(d,e,f)
---                  ,(g,h,i)) = a+b+c+d+e+f+g+h+i
+
 
 
 
@@ -235,39 +238,6 @@ laplace img = stencil stencilLaplace clamp img
                        ,(d,e,f)
                        ,(g,h,i)) = -b-d+(4*e)-f-h
 
-
-test :: IO ()
-test  =  do
-    putStrLn "Iniciando Test Fichero Accelerate.hs"
-    {--Leyendo imágenes --}
-    -- img <- readImageAcc "images/saitama.png"
-    img <- readImageAcc "data/images/lena_color.png"
-
-    {--Creación Histograma--}
-    -- let (r,g,b) = gHistogram (use img)
-    -- El comando run nos trae devuelta los datos de la GPU
-    -- print (run r, run g , run b)
-
-    {--Blanco y Negro--}
-    let gr = PTX.run $ grayScale (use img)
-    savePngImage "outputgreyacc.png" (ImageYF $ greyToJcy gr)
-
-    {--Filtros--}
-
-    -- let blr = run $ blur $ blur $ blur (use gr)
-    -- savePngImage "axaa.png" (ImageYF $ greyToJcy blr)
-
-    -- let sobel = run $ magnitude (use gr)
-    -- savePngImage "sobelAcc.png" (ImageYF $ greyToJcy sobel)
-
-    -- let imagelaplace =  run $ laplace (use gr)
-    -- savePngImage "laplaceAcc.png" (ImageYF $ greyToJcy imagelaplace)
-
-    let gausssmouth =  run $ gaussianSmoothing (use gr)
-    savePngImage "xxxxxxxx.png" (ImageYF $ greyToJcy gausssmouth)
-
-
-    putStrLn "Fin del Test fichero Acelerate.hs"
 
 
 

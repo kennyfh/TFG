@@ -1,3 +1,11 @@
+-- |
+-- Module:      : Juicy
+-- Copyright    : [2022] Kenny Jesús Flores Huamán
+-- License      : BSD3
+--
+-- Maintainer   : Kenny Jesús Flores Huamán <kennyjesus@pm.me>
+-- Stability    : experimental
+-- Portability  : non-portable (GHC extensions)
 {-# LANGUAGE RankNTypes #-}
 module Juicy (readImageJuicy,getAllFrames,
 saveVideo
@@ -39,7 +47,7 @@ readImageJuicy path = do
         Right img -> return $ convertRGB8 img -- En este proyecto se trabaja con RGB8
 
 
-{-forM_ in paralle haskell
+{-
   _____                                         
  |  ___|  _ __    __ _   _ __ ___     ___   ___ 
  | |_    | '__|  / _` | | '_ ` _ \   / _ \ / __|

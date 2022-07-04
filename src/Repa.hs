@@ -1,3 +1,11 @@
+-- |
+-- Module:      : Repa
+-- Copyright    : [2022] Kenny Jesús Flores Huamán
+-- License      : BSD3
+--
+-- Maintainer   : Kenny Jesús Flores Huamán <kennyjesus@pm.me>
+-- Stability    : experimental
+-- Portability  : non-portable (GHC extensions)
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE PackageImports, BangPatterns, QuasiQuotes, PatternGuards,
@@ -434,53 +442,3 @@ laplace img =
 --                                        1   2  4  5   5   5  4  2  1
 --                                        0   1  1  2   2   2  1  1  0|]
 
-
-
-{--         
-  _____                _   
- |_   _|   ___   ___  | |_ 
-   | |    / _ \ / __| | __|
-   | |   |  __/ \__ \ | |_ 
-   |_|    \___| |___/  \__|
-                           
---}
-
-test :: IO ()
-test = do
-    putStrLn "Iniciando Test Fichero Repa.hs"
-    -- img <- readImageIntoRepa "data/images/saitama.png"
-    -- img <- readImageIntoRepa "data/images/lena_color.png"
-    {-FIltro Gaussiano-}
-    -- blurImg <- mapM (promote >=> blur 4 >=> demote) img
-    -- savePngImage "blursaitama.png" (ImageRGB8 $ repaToJuicy blurImg)
-
-    {-Black and White-}
-    -- imgGrey <- toGrayScaleV2 img
-    -- -- savePngImage "blackandwhite.png" (ImageYF $ exportBW blackAndWhite)
-
-    {-Filtro Sobel-}
-    -- output <- sobel imgGrey
-    -- savePngImage "sobelrepa.png" (ImageYF $ exportBW output)
-
-    {-Filtro Laplace-}
-
-    -- lple <- laplace imgGrey 
-    -- savePngImage "laplace.png" (ImageYF $ exportBW lple)
-
-    {-Filtro Laplacian of Gaussian-}
-    -- laplaceGauss <- laplacianOfGaussian imgGrey
-    -- savePngImage "LoGRepa.png" (ImageYF $ exportBW laplaceGauss)
-    
-    {-Histograma (Sequence)-}
-    -- hstSequence <- generateHistograms <$> mapM promoteInt img
-    -- print hstSequence
-
-    {-Histograma (Vector)-}
-    -- hstVector <- generateHists <$> mapM promoteInt img
-    -- print hstVector
-    let arr = fromListUnboxed (Z :. 7) [7,6..1] :: Array U DIM1 Int
-    let x =  R.computeS . R.map (*2) $ R.map (+1) arr :: Array U DIM1 Int
-    print x
-
-
-    putStrLn "El test ha ido correctamente"

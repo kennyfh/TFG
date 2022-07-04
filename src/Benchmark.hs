@@ -42,7 +42,7 @@ import Data.Array.Accelerate.IO.Codec.Picture
 import Data.Array.Accelerate
 import qualified Data.Array.Accelerate.Interpreter as Native
 
----- 
+
 
 
 
@@ -181,12 +181,12 @@ testGrayScale = do
   -- Prueba Imagen 1 : Accelerate
   imgAcc <- readImageAcc "data/images/PhotoMachupichu.png"
   let grAcc =  B.run1 (selectBackend 2) A.grayScale imgAcc
-  savePngImage "machupichuGrayScale.png" (ImageYF $ greyToJcy grAcc)
+  savePngImage "output/accelerate/machupichuGrayScale.png" (ImageYF $ greyToJcy grAcc)
 
   -- Prueba Imagen 2 : Repa
   imgRepa <- readImageIntoRepa "data/images/flyAda.jpg"
   grRepa <- R.toGrayScaleV2 imgRepa
-  savePngImage "flyAdaGrayScale.png" (ImageYF $ exportBW grRepa)
+  savePngImage "output/repa/flyAdaGrayScale.png" (ImageYF $ exportBW grRepa)
 
 
   putStrLn "Fin prueba"
@@ -200,13 +200,13 @@ testSobel =  do
   -- Prueba Imagen 1 : Accelerate
   imgAcc <- readImageAcc "data/images/tajmahal.jpg"
   let sobelAcc = B.run1 (selectBackend 2) (A.sobel . A.grayScale) imgAcc
-  savePngImage "sobelAcc.png" (ImageYF $ greyToJcy sobelAcc)
+  savePngImage "output/accelerate/sobelAcc.png" (ImageYF $ greyToJcy sobelAcc)
 
   -- Prueba Imagen 2 : Repa
   imgRepa <- readImageIntoRepa "data/images/lena_color.png"
   imgGreyRepa <- R.toGrayScaleV2 imgRepa
   outputR <- R.sobel imgGreyRepa
-  savePngImage "sobelrepa.png" (ImageYF $ exportBW outputR)
+  savePngImage "output/repa/sobelrepa.png" (ImageYF $ exportBW outputR)
 
 
   putStrLn "Fin test Sobel"
@@ -239,12 +239,12 @@ testMean =  do
   -- Prueba Imagen 1 : Accelerate
   imgAcc <- readImageAcc "data/images/skyWithPoissonNoise.png"
   let meanAcc = B.run1 (selectBackend 2) (A.demoteimageP . A.meanRGBFilter . A.promoteImageF) imgAcc
-  savePngImage "skyMean.png" (ImageRGB8 $ rgbToJcy meanAcc)
+  savePngImage "output/accelerate/skyMean.png" (ImageRGB8 $ rgbToJcy meanAcc)
 
   -- Prueba Imagen 2 : Repa
   imgRepa <- readImageIntoRepa "data/images/trujilloPoissonNoise.png"
   grRepa <- (mapM $ R.promote >=> R.meanF >=> R.demote) imgRepa
-  savePngImage "trujilloMean.png" (ImageRGB8 $ repaToJuicy grRepa)
+  savePngImage "output/repa/trujilloMean.png" (ImageRGB8 $ repaToJuicy grRepa)
 
   putStrLn "FIn del mean "
 
@@ -256,12 +256,12 @@ testGaussBlur = do
   -- https://pixabay.com/es/photos/%c3%a1rbol-lago-estrellas-reflexi%c3%b3n-838667/
   imgAcc <- readImageAcc "data/images/treegaussnoise.png"
   let gausAcc =  B.run1 (selectBackend 2) (A.demoteimageP . A.blurRGBV2 . A.blurRGBV2 . A.promoteImageF) imgAcc
-  savePngImage "treeGauss.png" (ImageRGB8 $ rgbToJcy gausAcc)
+  savePngImage "output/accelerate/treeGauss.png" (ImageRGB8 $ rgbToJcy gausAcc)
 
   -- Repa
   imgRepa <- readImageIntoRepa "data/images/catwithgaussnoise.png"
   gaussRepaV1RGB <-  mapM (R.promote >=> R.blurV1 2 >=> R.demote) imgRepa
-  savePngImage "catGauss.png" (ImageRGB8 $ repaToJuicy gaussRepaV1RGB)
+  savePngImage "output/repa/catGauss.png" (ImageRGB8 $ repaToJuicy gaussRepaV1RGB)
   putStrLn "FIn del gauss blur"
 
 
@@ -270,13 +270,13 @@ testLaplace = do
   -- https://unsplash.com/photos/vjDbHCjHlEY
   imgAcc <- readImageAcc "data/images/asialpl.jpg"
   let imgL = B.run1 (selectBackend 2) (A.laplace . A.grayScale) imgAcc
-  savePngImage "asialpl.png" (ImageYF $ greyToJcy imgL)
+  savePngImage "output/accelerate/asialpl.png" (ImageYF $ greyToJcy imgL)
 
   --https://unsplash.com/photos/HXNwatPDGic
   imgRepa <- readImageIntoRepa "data/images/wallslpl.jpg"
   lplRepa <- R.toGrayScaleV2 imgRepa
   outputR <- R.laplace lplRepa
-  savePngImage "wallsLaplaceFilter.png" (ImageYF $ exportBW outputR)
+  savePngImage "output/repa/wallsLaplaceFilter.png" (ImageYF $ exportBW outputR)
   putStrLn "Fin del test"
 
 

@@ -1,0 +1,269 @@
+Inicio de los test
+benchmarking Histogram/Repa V1: Sequencial
+time                 3.251 s    (3.022 s .. 3.402 s)
+                     0.999 R²   (0.998 R² .. 1.000 R²)
+mean                 3.227 s    (3.171 s .. 3.259 s)
+std dev              54.66 ms   (19.37 ms .. 74.25 ms)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking Histogram/Repa V2: Cada canal en paralelo
+time                 1.610 s    (1.135 s .. 2.019 s)
+                     0.990 R²   (0.962 R² .. 1.000 R²)
+mean                 2.023 s    (1.817 s .. 2.281 s)
+std dev              257.6 ms   (95.78 ms .. 353.9 ms)
+variance introduced by outliers: 23% (moderately inflated)
+
+benchmarking Histogram/Repa V3: Cada canal y fila en paralelo
+time                 122.8 ms   (98.86 ms .. 133.9 ms)
+                     0.982 R²   (0.939 R² .. 0.999 R²)
+mean                 130.6 ms   (124.5 ms .. 142.1 ms)
+std dev              11.51 ms   (6.486 ms .. 15.63 ms)
+variance introduced by outliers: 23% (moderately inflated)
+
+benchmarking Histogram/Accelerate : Interprete
+time                 2.089 s    (2.014 s .. 2.250 s)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 2.030 s    (2.014 s .. 2.061 s)
+std dev              30.41 ms   (243.1 μs .. 35.91 ms)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking Histogram/Accelerate : CPU
+time                 15.16 ms   (13.71 ms .. 16.35 ms)
+                     0.934 R²   (0.864 R² .. 0.979 R²)
+mean                 16.76 ms   (15.63 ms .. 17.94 ms)
+std dev              2.855 ms   (2.303 ms .. 4.014 ms)
+variance introduced by outliers: 74% (severely inflated)
+
+benchmarking Histogram/Descanso entre GPU y CPU
+time                 13.80 ns   (13.77 ns .. 13.84 ns)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 13.92 ns   (13.86 ns .. 13.98 ns)
+std dev              203.3 ps   (133.2 ps .. 279.2 ps)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking Histogram/Accelerate : GPU
+time                 798.3 μs   (782.9 μs .. 811.9 μs)
+                     0.987 R²   (0.967 R² .. 0.998 R²)
+mean                 874.9 μs   (834.3 μs .. 998.6 μs)
+std dev              234.3 μs   (86.44 μs .. 428.6 μs)
+variance introduced by outliers: 96% (severely inflated)
+
+benchmarking GreyScale/Repa V1: Uso de zipWith
+time                 10.82 ms   (10.40 ms .. 11.19 ms)
+                     0.994 R²   (0.987 R² .. 0.998 R²)
+mean                 11.25 ms   (11.04 ms .. 12.03 ms)
+std dev              973.0 μs   (455.4 μs .. 1.941 ms)
+variance introduced by outliers: 47% (moderately inflated)
+
+benchmarking GreyScale/Repa v2: Uso de zip3
+time                 2.881 ms   (2.640 ms .. 3.125 ms)
+                     0.950 R²   (0.920 R² .. 0.980 R²)
+mean                 3.191 ms   (2.943 ms .. 3.870 ms)
+std dev              1.432 ms   (294.6 μs .. 2.710 ms)
+variance introduced by outliers: 98% (severely inflated)
+
+benchmarking GreyScale/Accelerate : Interprete
+time                 474.6 ms   (427.4 ms .. 547.0 ms)
+                     0.997 R²   (0.993 R² .. 1.000 R²)
+mean                 493.2 ms   (483.0 ms .. 509.6 ms)
+std dev              16.09 ms   (57.56 μs .. 20.44 ms)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking GreyScale/Accelerate : CPU
+time                 265.9 μs   (261.4 μs .. 270.6 μs)
+                     0.985 R²   (0.965 R² .. 0.996 R²)
+mean                 297.4 μs   (283.4 μs .. 328.5 μs)
+std dev              70.62 μs   (39.11 μs .. 132.7 μs)
+variance introduced by outliers: 96% (severely inflated)
+
+benchmarking GreyScale/Descanso entre GPU y CPU
+time                 13.48 ns   (13.45 ns .. 13.53 ns)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 13.60 ns   (13.53 ns .. 13.69 ns)
+std dev              274.7 ps   (149.9 ps .. 364.2 ps)
+variance introduced by outliers: 31% (moderately inflated)
+
+benchmarking GreyScale/Accelerate : GPU
+time                 138.6 μs   (137.3 μs .. 140.0 μs)
+                     0.998 R²   (0.997 R² .. 0.999 R²)
+mean                 142.5 μs   (140.4 μs .. 145.4 μs)
+std dev              8.492 μs   (6.395 μs .. 12.05 μs)
+variance introduced by outliers: 59% (severely inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 1x5 y 5x1/Repa V1: Uso de 2 Kernels 1x5 y 5x1
+time                 17.22 ms   (15.31 ms .. 19.24 ms)
+                     0.947 R²   (0.904 R² .. 0.987 R²)
+mean                 16.34 ms   (15.76 ms .. 17.37 ms)
+std dev              1.863 ms   (1.075 ms .. 2.721 ms)
+variance introduced by outliers: 57% (severely inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 1x5 y 5x1/AccelerateV1 : Interprete
+time                 9.439 s    (7.825 s .. 11.83 s)
+                     0.993 R²   (0.980 R² .. 1.000 R²)
+mean                 9.738 s    (9.346 s .. 10.31 s)
+std dev              558.7 ms   (159.4 ms .. 744.7 ms)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 1x5 y 5x1/AccelerateV1 : CPU
+time                 8.244 ms   (7.993 ms .. 8.439 ms)
+                     0.986 R²   (0.970 R² .. 0.994 R²)
+mean                 8.534 ms   (8.329 ms .. 8.840 ms)
+std dev              701.8 μs   (504.5 μs .. 893.7 μs)
+variance introduced by outliers: 45% (moderately inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 1x5 y 5x1/Descanso entre GPU y CPU
+time                 13.46 ns   (13.29 ns .. 13.61 ns)
+                     0.999 R²   (0.998 R² .. 0.999 R²)
+mean                 13.21 ns   (13.06 ns .. 13.35 ns)
+std dev              504.5 ps   (426.0 ps .. 622.0 ps)
+variance introduced by outliers: 62% (severely inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 1x5 y 5x1/AccelerateV1 : GPU
+time                 1.289 ms   (1.249 ms .. 1.323 ms)
+                     0.996 R²   (0.993 R² .. 0.998 R²)
+mean                 1.298 ms   (1.281 ms .. 1.315 ms)
+std dev              54.31 μs   (41.46 μs .. 68.15 μs)
+variance introduced by outliers: 30% (moderately inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 5x5 /Repa v2: Uso de 1 kernel 5x5
+time                 23.98 ms   (22.53 ms .. 25.73 ms)
+                     0.985 R²   (0.970 R² .. 0.997 R²)
+mean                 24.65 ms   (23.60 ms .. 27.38 ms)
+std dev              3.463 ms   (1.048 ms .. 6.155 ms)
+variance introduced by outliers: 61% (severely inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 5x5 /AccelerateV2 : Interprete
+time                 20.95 s    (19.36 s .. 22.70 s)
+                     0.999 R²   (0.997 R² .. 1.000 R²)
+mean                 20.69 s    (20.45 s .. 21.04 s)
+std dev              335.0 ms   (90.58 ms .. 447.9 ms)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 5x5 /AccelerateV2 : CPU
+time                 14.07 ms   (12.64 ms .. 16.04 ms)
+                     0.911 R²   (0.828 R² .. 0.960 R²)
+mean                 16.54 ms   (15.40 ms .. 18.92 ms)
+std dev              4.020 ms   (2.501 ms .. 6.722 ms)
+variance introduced by outliers: 87% (severely inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 5x5 /Descanso entre GPU y CPU
+time                 12.45 ns   (12.35 ns .. 12.57 ns)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 12.46 ns   (12.40 ns .. 12.58 ns)
+std dev              298.3 ps   (202.6 ps .. 449.5 ps)
+variance introduced by outliers: 39% (moderately inflated)
+
+benchmarking Gaussian Blur (RGB) Uso kernel 5x5 /AccelerateV2 : GPU
+time                 1.572 ms   (1.540 ms .. 1.599 ms)
+                     0.994 R²   (0.987 R² .. 0.998 R²)
+mean                 1.610 ms   (1.580 ms .. 1.696 ms)
+std dev              134.9 μs   (81.57 μs .. 249.0 μs)
+variance introduced by outliers: 63% (severely inflated)
+
+benchmarking Mean/Repa : Mean Filter
+time                 13.62 ms   (12.50 ms .. 14.87 ms)
+                     0.969 R²   (0.941 R² .. 0.990 R²)
+mean                 12.34 ms   (11.99 ms .. 12.84 ms)
+std dev              1.095 ms   (719.6 μs .. 1.811 ms)
+variance introduced by outliers: 46% (moderately inflated)
+
+benchmarking Mean/Accelerate : Interprete
+time                 8.189 s    (7.839 s .. 8.696 s)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 8.478 s    (8.330 s .. 8.611 s)
+std dev              157.4 ms   (126.7 ms .. 186.6 ms)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking Mean/Accelerate : CPU
+time                 11.66 ms   (11.43 ms .. 11.88 ms)
+                     0.990 R²   (0.972 R² .. 0.999 R²)
+mean                 12.01 ms   (11.76 ms .. 12.46 ms)
+std dev              862.5 μs   (586.6 μs .. 1.395 ms)
+variance introduced by outliers: 34% (moderately inflated)
+
+benchmarking Mean/Descanso entre GPU y CPU
+time                 13.65 ns   (13.53 ns .. 13.77 ns)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 13.70 ns   (13.61 ns .. 13.82 ns)
+std dev              371.4 ps   (285.0 ps .. 526.3 ps)
+variance introduced by outliers: 45% (moderately inflated)
+
+benchmarking Mean/Accelerate : GPU
+time                 1.417 ms   (1.398 ms .. 1.432 ms)
+                     0.992 R²   (0.972 R² .. 0.999 R²)
+mean                 1.448 ms   (1.414 ms .. 1.548 ms)
+std dev              185.1 μs   (61.96 μs .. 369.3 μs)
+variance introduced by outliers: 80% (severely inflated)
+
+benchmarking Sobel/Repa: Paralelismo CPU
+time                 11.64 ms   (11.15 ms .. 12.25 ms)
+                     0.992 R²   (0.985 R² .. 0.998 R²)
+mean                 11.33 ms   (11.12 ms .. 11.79 ms)
+std dev              759.0 μs   (439.9 μs .. 1.254 ms)
+variance introduced by outliers: 34% (moderately inflated)
+
+benchmarking Sobel/Accelerate : Interprete
+time                 3.577 s    (3.302 s .. NaN s)
+                     0.998 R²   (0.994 R² .. 1.000 R²)
+mean                 3.419 s    (3.366 s .. 3.510 s)
+std dev              87.18 ms   (1.553 ms .. 105.9 ms)
+variance introduced by outliers: 19% (moderately inflated)
+
+benchmarking Sobel/Accelerate : CPU
+time                 3.787 ms   (3.678 ms .. 3.864 ms)
+                     0.987 R²   (0.968 R² .. 0.997 R²)
+mean                 3.963 ms   (3.868 ms .. 4.141 ms)
+std dev              420.9 μs   (259.8 μs .. 709.5 μs)
+variance introduced by outliers: 65% (severely inflated)
+
+benchmarking Sobel/Descanso entre GPU y CPU
+time                 13.73 ns   (13.69 ns .. 13.81 ns)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 13.89 ns   (13.77 ns .. 14.06 ns)
+std dev              506.5 ps   (282.0 ps .. 762.5 ps)
+variance introduced by outliers: 59% (severely inflated)
+
+benchmarking Sobel/Accelerate : GPU
+time                 530.5 μs   (524.5 μs .. 540.0 μs)
+                     0.996 R²   (0.993 R² .. 0.998 R²)
+mean                 552.5 μs   (540.8 μs .. 569.0 μs)
+std dev              41.93 μs   (28.76 μs .. 52.65 μs)
+variance introduced by outliers: 65% (severely inflated)
+
+benchmarking Laplace/Repa: Paralelismo CPU
+time                 10.89 ms   (10.58 ms .. 11.12 ms)
+                     0.997 R²   (0.993 R² .. 0.999 R²)
+mean                 10.98 ms   (10.84 ms .. 11.44 ms)
+std dev              589.9 μs   (328.4 μs .. 1.057 ms)
+variance introduced by outliers: 26% (moderately inflated)
+
+benchmarking Laplace/Accelerate : Interprete
+time                 2.454 s    (2.019 s .. 2.648 s)
+                     0.996 R²   (NaN R² .. 1.000 R²)
+mean                 3.172 s    (2.865 s .. 3.984 s)
+std dev              546.9 ms   (33.36 ms .. 671.3 ms)
+variance introduced by outliers: 47% (moderately inflated)
+
+benchmarking Laplace/Accelerate : CPU
+time                 775.7 μs   (568.7 μs .. 1.004 ms)
+                     0.658 R²   (0.527 R² .. 0.792 R²)
+mean                 1.365 ms   (1.136 ms .. 1.697 ms)
+std dev              1.049 ms   (687.4 μs .. 1.496 ms)
+variance introduced by outliers: 99% (severely inflated)
+
+benchmarking Laplace/Descanso entre GPU y CPU
+time                 15.42 ns   (15.33 ns .. 15.52 ns)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 15.56 ns   (15.46 ns .. 15.70 ns)
+std dev              385.9 ps   (289.1 ps .. 543.0 ps)
+variance introduced by outliers: 40% (moderately inflated)
+
+benchmarking Laplace/Accelerate : GPU
+time                 296.7 μs   (272.3 μs .. 334.6 μs)
+                     0.930 R²   (0.884 R² .. 0.985 R²)
+mean                 308.4 μs   (290.7 μs .. 329.2 μs)
+std dev              65.57 μs   (41.65 μs .. 85.18 μs)
+variance introduced by outliers: 94% (severely inflated)
+
+Fin de los test
+Fin del Main

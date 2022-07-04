@@ -1,3 +1,11 @@
+-- |
+-- Module:      : JuicyAccelerate
+-- Copyright    : [2022] Kenny Jesús Flores Huamán
+-- License      : BSD3
+--
+-- Maintainer   : Kenny Jesús Flores Huamán <kennyjesus@pm.me>
+-- Stability    : experimental
+-- Portability  : non-portable (GHC extensions)
 module JuicyAccelerate where
 
 {-- MODULOS IMPORTADOS-}
@@ -45,15 +53,7 @@ oneCToJcy = imageOfArray
 -- grayToChnl :: Matrix Float -> Image Pixel8
 -- grayToChnl = 
 
-{-- TEST --}
-test :: IO ()
-test  = do
-    img <- readImageAcc "images/saitama.png"
-    -- let xs = pp img
-    -- let xs2 = imageOfArray xs
-    -- savePngImage "locora.png" (ImageRGB8 xs2)
-    -- print img    
-    putStrLn "Hello World"
+
 
 
 
