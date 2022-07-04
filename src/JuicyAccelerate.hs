@@ -24,6 +24,7 @@ imgToArr img@Image{imageWidth=imageWidth, imageHeight=imageHeight, imageData=ima
        in (r, g, b))
 
 
+-- TODO: cambiar el run por Accelerate Native o Accelerate PTX
 rgbToJcy :: Matrix RGB -> Image PixelRGB8 
 rgbToJcy arr = imageOfArray $ prom arr
     where prom :: Matrix RGB -> Matrix PixelRGB8 
@@ -35,6 +36,14 @@ rgbToJcy arr = imageOfArray $ prom arr
 greyToJcy :: Matrix Float -> Image PixelF
 greyToJcy = imageOfArray
 
+
+oneCToJcy :: Matrix Pixel8 -> Image Pixel8
+oneCToJcy = imageOfArray
+
+
+
+-- grayToChnl :: Matrix Float -> Image Pixel8
+-- grayToChnl = 
 
 {-- TEST --}
 test :: IO ()

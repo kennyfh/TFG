@@ -9,12 +9,16 @@ import Benchmark as B
 -- MAIN 
 main :: IO ()
 main =  do
+    -- B.vidGaussRepa
+    B.vidGaussAcc
     -- Rx.test
     -- Ax.test
-    B.testKenichin
     -- B.testGrayScale
     -- B.testSobel
     -- B.testHistograma
     -- B.testLaplace
     -- Rx.test
+    -- B.testB
+
+
     putStrLn  "Fin del Main"

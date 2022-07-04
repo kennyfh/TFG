@@ -21,6 +21,8 @@ jcyToRepa img@Image{imageWidth=imageWidth, imageHeight=imageHeight, imageData=im
        let (PixelRGB8 r g b) = pixelAt img x y
        in (r, g, b))
 
+
+
 readImageIntoRepa :: FilePath -> IO (ImgRGB Pixel8)
 readImageIntoRepa path = do
     a1 <- readImageJuicy path -- Image PixelRGB8

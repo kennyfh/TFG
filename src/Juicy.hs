@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module Juicy (readImageJuicy,getAllFrames,
 saveVideo
 )where
@@ -84,7 +85,8 @@ addNextFrame getFrame frames = do
 {--------------------------------------------------------------------------------------------
 saveVideo 
 ---------------------------------------------------------------------------------------------}
-saveVideo :: [Image PixelRGB8] -> FilePath -> IO ()
+-- saveVideo :: [Image PixelRGB8] -> FilePath -> IO ()
+saveVideo :: forall p. JuicyPixelFormat p => [Image p] -> FilePath -> IO()
 saveVideo images path = do
     -- Inicializamos el ffmpeg con todos los codecs registrados
     initFFmpeg

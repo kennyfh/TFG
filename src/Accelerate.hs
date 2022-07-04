@@ -1,11 +1,7 @@
 {-# LANGUAGE ConstraintKinds   #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE ViewPatterns      #-}
-
-{-# LANGUAGE BangPatterns  #-}
 {-# LANGUAGE TypeFamilies  #-}
-{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS -fno-warn-orphans #-}
 module Accelerate where
 
@@ -113,7 +109,7 @@ convolve1x5 kernel ((_,a,_), (_,b,_), (_,c,_), (_,d,_), (_,e,_))
 -- 2 pasadas por cada eje usando 
 -- blur :: (P.Num a, Elt a, P.Fractional a, P.Num (Exp a)) => Acc (Matrix a) -> Acc (Matrix a)
 blur :: Acc (Matrix Float) -> Acc (Matrix Float)
-blur = stencil (convolve5x1 gaussian) clamp 
+blur = stencil (convolve5x1 gaussian) clamp
        . stencil (convolve1x5 gaussian) clamp
     where gaussian = P.map A.constant [0.06136,0.24477,0.38774,0.24477,0.06136]
 
@@ -131,7 +127,7 @@ blurRGBV2 img = A.zip3 (A.compute $ blur r) (A.compute $ blur g) (A.compute $ bl
 -- https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
 --SIGMA =1
 gaussianSmoothing :: Acc (Matrix Float) -> Acc (Matrix Float)
-gaussianSmoothing img = 
+gaussianSmoothing img =
   A.map (/273) $ stencil gaussian clamp img
   where gaussian :: Stencil5x5 Float -> Exp Float
         gaussian ((a1,a2,a3,a4,a5)
@@ -166,7 +162,7 @@ meanRGBFilter :: Acc (Matrix (Float,Float,Float)) -> Acc (Matrix (Float,Float,Fl
 meanRGBFilter img= A.zip3 (A.compute $ meanChannel r) (A.compute $ meanChannel g) (A.compute $ meanChannel b)
   where (r,g,b) = A.unzip3 img
 
--- VERSION SIN OPTIMIZAR
+-- VERSION 1
 meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
 meanChannel img = stencil meanK clamp img
   where meanK ::  Stencil3x3 Float -> Exp Float
@@ -174,7 +170,7 @@ meanChannel img = stencil meanK clamp img
                  ,(d,e,f)
                  ,(g,h,i)) = a/9+b/9+c/9+d/9+e/9+f/9+g/9+h/9+i/9
 
--- -- VERSION optimizada
+-- -- VERSION 2
 -- meanChannel :: Acc (Matrix Float) -> Acc (Matrix Float)
 -- meanChannel img = A.map (/9) $ stencil meanK clamp img
 --   where meanK ::  Stencil3x3 Float -> Exp Float
