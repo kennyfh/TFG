@@ -42,11 +42,21 @@ instance Unbox e => NFData (Array U DIM1 e) where
 
 -- función producto escalar en Repa
 
--- scalarpRepa :: (Num e, Monad m, Unbox e) => Array U DIM1 e -> Array U DIM1 e -> m e  
+-- Versión Unboxed 
+-- scalarpRepa :: (Monad m) => Array U DIM1 Float -> Array U DIM1 Float -> m Float
+-- scalarpRepa xs ys = sumAllP (R.zipWith (*) xs ys)
+
+testScalarRepa :: IO ()
+testScalarRepa = do
+    let arr = fromListUnboxed (Z :. 10000000) [1..10000000] :: Array U DIM1 Float
+    -- let arr = R.fromFunction (Z :.20) (\( Z :. i) -> i +1) :: Array D DIM1 Float
+    -- print arr 
+    z <- scalarpRepa arr arr
+    print z 
+
+-- Versión genérica
 scalarpRepa :: (Shape sh, Unbox a, Num a, Monad m, Source r1 a, Source r2 a) => Array r1 sh a -> Array r2 sh a -> m a
 scalarpRepa xs ys = sumAllP (R.zipWith (*) xs ys)
-
-
 
 -- Funciones para cambiar tipos de datos en Repa
 promote :: Monad m => Channel Pixel8 -> m (Channel Float)

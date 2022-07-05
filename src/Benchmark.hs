@@ -43,9 +43,6 @@ import Data.Array.Accelerate
 import qualified Data.Array.Accelerate.Interpreter as Native
 
 
-
-
-
 -- Función de prueba para testear Criterion: https://github.com/haskell/criterion/blob/master/examples/Fibber.hs
 fib m | m P.< 0     = error "negative!"
       | otherwise = go m
@@ -284,53 +281,74 @@ vidGaussAcc:: IO()
 vidGaussAcc = do
     putStrLn "Inicio prueba video Accelarate"
     -- vpath <- getLine
-    let vpath =  "data/videos/sample5s.mp4"
+    let vpath =  "data/videos/videoruidoG.mp4"
     xs <-  getAllFrames vpath -- videos/video1.mp4
     let frames = P.map (B.run (selectBackend 2) . A.demoteimageP . A.blurRGBV2 .  A.blurRGBV2 . A.promoteImageF . A.use . imgToArr) xs
     putStrLn "entramos a 2"
     let frames2 = P.map rgbToJcy2 frames
-    saveVideo frames2 "videoK.mp4"
+    saveVideo frames2 "output/accelerate/videoK.mp4" -- CAMBIAR EL NOMBRE 
     putStrLn "Final prueba video (Accelerate)"
+
+
+vidMeanAcc :: IO ()
+vidMeanAcc = do
+  putStrLn "Inicio de prueba accelerate"
+  let vpath =  "data/videos/videoruidoG.mp4"
+  xs <-  getAllFrames vpath -- videos/video1.mp4
+  let frames = P.map (B.run (selectBackend 2) . A.demoteimageP . A.meanRGBFilter . A.promoteImageF . A.use . imgToArr) xs
+  let frames2 = P.map rgbToJcy2 frames
+  saveVideo frames2 "output/accelerate/videoMeanAcc.mp4" 
+  putStrLn "Fin de prueba accelerate"
+
 
 -- TODO:
 rgbToJcy2 :: A.Matrix RGB -> Image PixelRGB8
 rgbToJcy2 arr = imageOfArray $ prom arr
     where prom :: A.Matrix RGB -> A.Matrix PixelRGB8
           prom mat =  Native.run $ A.map (\p -> let (r,g,b) = unlift p in PixelRGB8_ r g b) (use arr)
-
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 
 vidGaussRepa ::  IO ()
 vidGaussRepa = do
   putStrLn "Inicio del test de video (Repa)"
-  let vpath =  "data/videos/sample5s.mp4"
+  let vpath =  "data/videos/videoruidoG.mp4"
   xs <-  getAllFrames vpath
   putStrLn "Fin de lectura de frames a Juicy"
-  repa_xn <- mapM fun xs
-  saveVideo repa_xn "videoKRepa.mp4"
-  putStrLn "Final prueba video (Accelerate)"
+  repa_xn <- mapM funGauss xs
+  saveVideo repa_xn "output/repa/videoKRepa2.mp4"
+  putStrLn "Final prueba video (Repa)"
 
-
-fun :: Image PixelRGB8 -> IO (Image PixelRGB8)
-fun img = do
+funGauss :: Image PixelRGB8 -> IO (Image PixelRGB8)
+funGauss img = do
     asd <- jcyToRepa img
     let (r,g,b) = U.unzip3 asd
     xs <- mapM (R.promote >=> R.blurV1 2 >=> R.demote) [r,g,b]
     return (repaToJuicy xs)
 
 
-scalarp :: ([Float],[Float]) -> Float
-scalarp p@(xs,ys)  =  P.foldl (+) 0 (P.zipWith (*) xs ys)
+
+vidMeanRepa ::  IO ()
+vidMeanRepa = do
+  putStrLn "Inicio del test de video (Repa)"
+  let vpath =  "data/videos/videoruidoG.mp4"
+  xs <-  getAllFrames vpath
+  putStrLn "Fin de lectura de frames a Juicy"
+  repa_xn <- mapM funMean xs
+  saveVideo repa_xn "output/repa/videoMeanRepa.mp4"
+  putStrLn "Final prueba video (Repa)"
+
+funMean :: Image PixelRGB8 -> IO (Image PixelRGB8)
+funMean img = do
+    asd <- jcyToRepa img
+    let (r,g,b) = U.unzip3 asd
+    xs <- mapM (R.promote >=> R.meanF >=> R.demote) [r,g,b]
+    return (repaToJuicy xs)
 
 
-scalarPTest :: IO ()
-scalarPTest = do
-  putStrLn "Pruebas Producto scalar"
-  let arrRepa = fromFunction (Z :.1000) (\( Z :. i) -> i +1 :: Int )
-  let arrAcc =  generate ( I1 10) (\( I1 i) -> i + 1) :: Acc (Vector Int)
-  defaultMain [
-                bgroup "Prueba" [ bench "1"  $  nf scalarp ([1..1000],[1..1000]),
-                                  bench "2" $  nf scalarp ([1..1000],[1..1000])
-                  
-                ]
+-- Lo pasamos como una tupla de listas debido a que es más sencillo hacer luego pruebas con
+-- él en Criterion
+scalarp :: [Float] -> [Float] -> Float
+scalarp xs ys  =  P.foldl (+) 0 (P.zipWith (*) xs ys)
 
-              ]
+

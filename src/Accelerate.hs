@@ -24,8 +24,17 @@ import Control.Monad ((>=>))
 
 
 -- Función producto escalar en Accelerate 
-scalarpAcc :: Acc (Vector Float) -> Acc (Vector Float) -> Acc (Scalar Float)
-scalarpAcc xs ys = fold (+) 0 (A.zipWith (*) xs ys )
+scalarpAcc :: Vector Float -> Vector Float -> Acc (Scalar Float)
+scalarpAcc xs ys =
+  let u = use xs
+      t = use ys
+  in fold (+) 0 $ A.zipWith (*) u t
+
+testScalarAcc :: IO ()
+testScalarAcc =  do
+  let arr = fromList (Z :. 10000000) [0..] :: Vector Float
+  let z = PTX.runN $ scalarpAcc arr arr 
+  print z
 
 
 promoteInt :: Acc (Matrix Pixel8) -> Acc (Matrix Int)
