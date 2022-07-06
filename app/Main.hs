@@ -20,17 +20,19 @@ main :: IO ()
 main =  do
     --Mean 
     --B.vidMeanAcc
-    --B.vidMeanRepa
+    -- B.vidMeanRepa
 
     --Gauss
-    -- B.vidGaussAcc
-    -- B.vidGaussRepa
+    --B.vidGaussAcc
+    --B.vidGaussRepa
 
     -- B.testGrayScale
     -- B.testSobel
     -- B.testHistograma
     -- B.testLaplace
 
+    B.testBenchmarks
+    B.testImages
     putStrLn  "Fin del Main"
 
 testHaskell :: IO ()

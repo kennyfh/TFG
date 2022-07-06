@@ -281,23 +281,23 @@ vidGaussAcc:: IO()
 vidGaussAcc = do
     putStrLn "Inicio prueba video Accelarate"
     -- vpath <- getLine
-    let vpath =  "data/videos/videoruidoG.mp4"
+    let vpath =  "data/videos/sample3.mp4"
     xs <-  getAllFrames vpath -- videos/video1.mp4
     let frames = P.map (B.run (selectBackend 2) . A.demoteimageP . A.blurRGBV2 .  A.blurRGBV2 . A.promoteImageF . A.use . imgToArr) xs
     putStrLn "entramos a 2"
     let frames2 = P.map rgbToJcy2 frames
-    saveVideo frames2 "output/accelerate/videoK.mp4" -- CAMBIAR EL NOMBRE 
+    saveVideo frames2 "output/accelerate/sample3GausAcc.mp4" -- CAMBIAR EL NOMBRE 
     putStrLn "Final prueba video (Accelerate)"
 
 
 vidMeanAcc :: IO ()
 vidMeanAcc = do
   putStrLn "Inicio de prueba accelerate"
-  let vpath =  "data/videos/videoruidoG.mp4"
+  let vpath =  "data/videos/sample2.mp4"
   xs <-  getAllFrames vpath -- videos/video1.mp4
   let frames = P.map (B.run (selectBackend 2) . A.demoteimageP . A.meanRGBFilter . A.promoteImageF . A.use . imgToArr) xs
   let frames2 = P.map rgbToJcy2 frames
-  saveVideo frames2 "output/accelerate/videoMeanAcc.mp4" 
+  saveVideo frames2 "output/accelerate/sample2.mp4" 
   putStrLn "Fin de prueba accelerate"
 
 
@@ -312,11 +312,11 @@ rgbToJcy2 arr = imageOfArray $ prom arr
 vidGaussRepa ::  IO ()
 vidGaussRepa = do
   putStrLn "Inicio del test de video (Repa)"
-  let vpath =  "data/videos/videoruidoG.mp4"
+  let vpath =  "data/videos/sample3.mp4"
   xs <-  getAllFrames vpath
   putStrLn "Fin de lectura de frames a Juicy"
   repa_xn <- mapM funGauss xs
-  saveVideo repa_xn "output/repa/videoKRepa2.mp4"
+  saveVideo repa_xn "output/repa/sample3GaussRepa.mp4"
   putStrLn "Final prueba video (Repa)"
 
 funGauss :: Image PixelRGB8 -> IO (Image PixelRGB8)
@@ -335,7 +335,7 @@ vidMeanRepa = do
   xs <-  getAllFrames vpath
   putStrLn "Fin de lectura de frames a Juicy"
   repa_xn <- mapM funMean xs
-  saveVideo repa_xn "output/repa/videoMeanRepa.mp4"
+  saveVideo repa_xn "output/repa/VideoMeanRepa2.mp4"
   putStrLn "Final prueba video (Repa)"
 
 funMean :: Image PixelRGB8 -> IO (Image PixelRGB8)
